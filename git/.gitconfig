@@ -1,0 +1,49 @@
+[core]
+	pager = delta
+	autocrlf = input
+
+[interactive]
+	diffFilter = delta --color-only
+
+[delta]
+	navigate = true
+	dark = true
+	side-by-side = true
+	line-numbers = true
+	hyperlinks = true
+
+[merge]
+	conflictstyle = diff3
+
+[diff]
+	colorMoved = default
+
+[rebase]
+	autoSquash = true
+	autoStash = true
+
+[pull]
+	rebase = true
+
+[push]
+	autoSetupRemote = true
+
+[fetch]
+	prune = true
+
+[init]
+	defaultBranch = main
+
+[alias]
+	lg    = log --oneline --graph --decorate --all
+	st    = status -sb
+	co    = checkout
+	br    = branch -vv
+	sw    = switch
+	wip   = commit -am "wip"
+	undo  = reset HEAD~1 --mixed
+	aliases = config --get-regexp alias
+
+# Machine-specific: user.name, user.email, signing, etc.
+[include]
+	path = ~/.gitconfig.local

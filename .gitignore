@@ -1,0 +1,9 @@
+# Never commit machine-local overrides
+*.local
+
+# macOS
+.DS_Store
+
+# Editor
+.idea/
+*.swp
