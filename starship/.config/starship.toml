@@ -1,0 +1,87 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+# Only listed modules run — all language modules are implicitly off.
+format = """
+$username$hostname$directory$git_branch$git_status$sudo$jobs$cmd_duration$status$line_break$character"""
+
+command_timeout = 500   # ms — évite les ralentissements sur NFS/SSHFS
+
+# ---------------------------------------------------------------------------
+# Identité — toujours visible (sysadmin sur plusieurs machines)
+# ---------------------------------------------------------------------------
+[username]
+show_always = true
+format    = "[$user]($style)@"
+style_user = "bold cyan"
+style_root = "bold red"      # rouge si root, inratable
+
+[hostname]
+ssh_only = false
+format   = "[$hostname]($style) "
+style    = "bold cyan"
+trim_at  = "."               # bluemoon.local → bluemoon
+
+# ---------------------------------------------------------------------------
+# Navigation
+# ---------------------------------------------------------------------------
+[directory]
+format            = "[$path]($style)[$read_only]($read_only_style) "
+style             = "bold blue"
+truncation_length = 4
+truncate_to_repo  = false    # pas de comportement "magique" dans les repos
+read_only         = " ro"
+read_only_style   = "red"
+
+# ---------------------------------------------------------------------------
+# Git — apparaît uniquement dans un repo
+# ---------------------------------------------------------------------------
+[git_branch]
+format = "[$symbol$branch]($style) "
+symbol = "on "
+style  = "bold purple"
+
+[git_status]
+format     = '([\[$all_status$ahead_behind\]]($style) )'
+style      = "bold yellow"
+ahead      = "⇡${count}"
+behind     = "⇣${count}"
+diverged   = "⇕⇡${ahead_count}⇣${behind_count}"
+modified   = "!${count}"
+staged     = "+${count}"
+untracked  = "?${count}"
+deleted    = "-${count}"
+stashed    = "≡"
+
+# ---------------------------------------------------------------------------
+# Infos système utiles en sysadmin
+# ---------------------------------------------------------------------------
+[sudo]
+disabled = false
+format   = "[sudo]($style) "
+style    = "bold red"
+symbol   = ""
+
+[jobs]
+format  = "[$symbol$number]($style) "
+style   = "bold yellow"
+symbol  = "⇡"               # jobs en background
+threshold = 1
+
+[cmd_duration]
+min_time = 5_000             # affiche seulement si > 5s
+format   = "[${duration}]($style) "
+style    = "yellow"
+
+[status]
+disabled = false
+format   = '[$symbol$status]($style) '
+symbol   = "✗ "
+style    = "bold red"
+success_symbol = ""          # rien si succès, pas de bruit
+
+# ---------------------------------------------------------------------------
+# Prompt final
+# ---------------------------------------------------------------------------
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol   = "[❯](bold red)"

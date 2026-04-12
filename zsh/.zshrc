@@ -75,6 +75,11 @@ if command -v bat &>/dev/null; then
 fi
 
 # ---------------------------------------------------------------------------
+# Prompt — starship
+# ---------------------------------------------------------------------------
+command -v starship &>/dev/null && eval "$(starship init zsh)"
+
+# ---------------------------------------------------------------------------
 # Machine-local overrides (~/.zshrc.local is gitignored, never committed)
 # ---------------------------------------------------------------------------
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
