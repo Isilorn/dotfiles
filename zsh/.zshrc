@@ -3,42 +3,40 @@
 # ---------------------------------------------------------------------------
 export PATH="$HOME/.local/bin:$PATH"
 
-# Homebrew (macOS arm64 → /opt/homebrew, Linux → /home/linuxbrew/.linuxbrew)
-if [[ -z "$HOMEBREW_PREFIX" ]]; then
-  if [[ -d /opt/homebrew ]]; then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-  elif [[ -d /home/linuxbrew/.linuxbrew ]]; then
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-  fi
+# Homebrew — macOS only (arm64: /opt/homebrew)
+if [[ "$OSTYPE" == darwin* && -z "$HOMEBREW_PREFIX" ]]; then
+  [[ -x /opt/homebrew/bin/brew ]] && eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
 
 # ---------------------------------------------------------------------------
 # zinit
+#   macOS  : installed via Homebrew
+#   Linux  : standalone install at $ZINIT_HOME (auto-bootstrapped if absent)
 # ---------------------------------------------------------------------------
-ZINIT_HOME="${ZINIT_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/zinit/zinit.git}"
-
-if [[ ! -d "$ZINIT_HOME" ]]; then
-  if [[ -n "$HOMEBREW_PREFIX" && -d "$HOMEBREW_PREFIX/opt/zinit" ]]; then
-    # Homebrew-installed zinit
-    source "$HOMEBREW_PREFIX/opt/zinit/zinit.zsh"
-  fi
+if [[ -n "$HOMEBREW_PREFIX" && -f "$HOMEBREW_PREFIX/opt/zinit/zinit.zsh" ]]; then
+  source "$HOMEBREW_PREFIX/opt/zinit/zinit.zsh"
 else
+  ZINIT_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/zinit/zinit.git"
+  if [[ ! -f "$ZINIT_HOME/zinit.zsh" ]]; then
+    print -P "%F{33}Bootstrapping zinit...%f"
+    git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+  fi
   source "$ZINIT_HOME/zinit.zsh"
 fi
 
 # Plugins
-zinit load sunlei/zsh-ssh                       # smarter ssh completions
+zinit load  sunlei/zsh-ssh                  # smarter ssh host completions
 zinit light zsh-users/zsh-autosuggestions
 zinit light zsh-users/zsh-syntax-highlighting
-zinit snippet OMZP::git                         # git aliases from Oh-My-Zsh
+zinit snippet OMZP::git                     # git aliases from Oh-My-Zsh
 
 # ---------------------------------------------------------------------------
 # fzf
 # ---------------------------------------------------------------------------
 if [[ -f ~/.fzf.zsh ]]; then
-  source ~/.fzf.zsh
+  source ~/.fzf.zsh                         # installed via git/Homebrew on mac
 elif command -v fzf &>/dev/null; then
-  eval "$(fzf --zsh)"
+  eval "$(fzf --zsh)"                       # fzf >= 0.48 (apt or standalone)
 fi
 
 export FZF_DEFAULT_OPTS="--height 40% --layout=reverse --border"
