@@ -55,6 +55,26 @@ Si des fichiers existent déjà (`~/.zshrc`, `~/.gitconfig`, etc.), `install.sh`
 
 Un scaffold vide de `~/.gitconfig.local` est créé automatiquement par `install.sh`.
 
+## Aliases
+
+Tous les aliases sont conditionnels — ils ne sont définis que si le binaire est présent sur la machine.
+
+| Alias | Remplace / Commande | Package requis |
+|---|---|---|
+| `ls` / `ll` / `lt` | eza avec options | `eza` |
+| `cat` | `bat --paging=never` | `bat` |
+| `tree` | `tree -C` (couleurs) | `tree` |
+| `top` | `btop` → `htop` → `top` (fallback) | `btop` ou `htop` |
+| `ncdu` | `ncdu --color dark -rr` | `ncdu` |
+| `jq` | `jq -C` (couleurs) | `jq` |
+| `duh` | `du -sh * \| sort -h` | — |
+| `ports` | `ss -tlnp` | — |
+| `myip` | `curl -s ifconfig.me` | `curl` |
+| `python` | `python3` | si `python` absent |
+| `pip` | `pip3` | si `pip` absent |
+
+`btop` n'est pas installé par `install.sh` — si présent sur la machine, l'alias `top` s'y branche automatiquement.
+
 ## WezTerm et SSH
 
 La config WezTerm (`wezterm/`) n'est stowée que sur macOS. Sur les machines distantes, le `.zshrc` détecte automatiquement une connexion WezTerm via SSH (grâce à `$TERM=wezterm`) et pose `TERM_PROGRAM=WezTerm` et `COLORTERM=truecolor` sans nécessiter de configuration côté serveur.
