@@ -87,8 +87,8 @@ Créé automatiquement par `install.sh` avec un scaffold vide. Contient tout ce 
 
 ```ini
 [user]
-    name  = Isilorn
-    email = 7522688+Isilorn@users.noreply.github.com
+    name  = Your Name
+    email = your@email.com
 
 # Signature GPG des commits (optionnel)
 # [user]

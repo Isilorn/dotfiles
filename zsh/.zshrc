@@ -34,9 +34,19 @@ zinit snippet OMZP::git                     # git aliases from Oh-My-Zsh
 # fzf
 # ---------------------------------------------------------------------------
 if [[ -f ~/.fzf.zsh ]]; then
-  source ~/.fzf.zsh                         # installed via git/Homebrew on mac
+  source ~/.fzf.zsh                         # macOS (Homebrew/git install)
 elif command -v fzf &>/dev/null; then
-  eval "$(fzf --zsh)"                       # fzf >= 0.48 (apt or standalone)
+  _fzf_init="$(fzf --zsh 2>/dev/null)"
+  if [[ -n "$_fzf_init" ]]; then
+    eval "$_fzf_init"                       # fzf >= 0.48
+  else
+    # fzf apt (Ubuntu) — version trop ancienne pour --zsh
+    [[ -f /usr/share/doc/fzf/examples/key-bindings.zsh ]] \
+      && source /usr/share/doc/fzf/examples/key-bindings.zsh
+    [[ -f /usr/share/doc/fzf/examples/completion.zsh ]] \
+      && source /usr/share/doc/fzf/examples/completion.zsh
+  fi
+  unset _fzf_init
 fi
 
 export FZF_DEFAULT_OPTS="--height 40% --layout=reverse --border"

@@ -320,6 +320,20 @@ set_default_shell() {
 }
 
 # ---------------------------------------------------------------------------
+# zinit plugins — pre-téléchargement au premier login
+# Lance un shell zsh interactif non-affiché pour déclencher zinit
+# ---------------------------------------------------------------------------
+install_zinit_plugins() {
+  info "Pre-installing zinit plugins"
+  if $DRY_RUN; then
+    printf '  \033[2m[dry-run] zsh -i -c exit\033[0m\n'
+  else
+    zsh -i -c exit 2>/dev/null || true
+    success "Zinit plugins installed"
+  fi
+}
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 main() {
@@ -342,6 +356,7 @@ main() {
   $NO_STOW     || stow_packages
   setup_gitconfig_local
   set_default_shell
+  install_zinit_plugins
 
   echo ""
   success "Done. Open a new shell to apply changes."
