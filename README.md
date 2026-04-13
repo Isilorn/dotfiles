@@ -2,16 +2,17 @@
 
 Personal dotfiles for **Mac (arm64)** and **Bluemoon (Ubuntu 24.04)**, managed with [GNU Stow](https://www.gnu.org/software/stow/).
 
-Stack : `zsh` · `zinit` · `git` + `delta` · `tmux` · `starship`
+Stack : `zsh` · `zinit` · `git` + `delta` · `tmux` · `starship` · `wezterm`
 
 ## Structure
 
-| Package | Symlink cible |
-|---|---|
-| `git/` | `~/.gitconfig` |
-| `zsh/` | `~/.zshrc` |
-| `tmux/` | `~/.tmux.conf` |
-| `starship/` | `~/.config/starship.toml` |
+| Package | Symlink cible | Machines |
+|---|---|---|
+| `git/` | `~/.gitconfig` | toutes |
+| `zsh/` | `~/.zshrc` | toutes |
+| `tmux/` | `~/.tmux.conf` | toutes |
+| `starship/` | `~/.config/starship.toml` | toutes |
+| `wezterm/` | `~/.config/wezterm/wezterm.lua` | macOS seulement |
 
 ## Installation
 
@@ -21,13 +22,26 @@ cd ~/.dotfiles
 ./install.sh
 ```
 
-Le script installe les dépendances (Homebrew sur macOS, apt sur Ubuntu), stow les packages et configure zsh comme shell par défaut.
+Le script :
+1. Installe les dépendances (Homebrew sur macOS, apt sur Ubuntu)
+2. **Sauvegarde** les fichiers existants avant de les remplacer
+3. Stow les packages (crée les symlinks dans `$HOME`)
+4. Configure zsh comme shell par défaut
+
+### Options
 
 ```bash
-./install.sh --dry-run    # aperçu sans modifier quoi que ce soit
-./install.sh --rollback   # supprime les symlinks et rétablit le shell précédent
+./install.sh --dry-run      # aperçu complet sans rien modifier
+./install.sh --rollback     # restaure les fichiers originaux et supprime les symlinks
 ./install.sh --no-packages  # stow uniquement, sans installer de packages
+./install.sh --no-stow      # packages uniquement, sans stower
 ```
+
+### Backup automatique
+
+Si des fichiers existent déjà (`~/.zshrc`, `~/.gitconfig`, etc.), `install.sh` les déplace dans `~/.dotfiles-backup/<timestamp>/` avant de stower. Plusieurs installations successives créent chacune leur propre entrée horodatée.
+
+`--rollback` restaure automatiquement depuis le backup le plus récent.
 
 ## Fichiers locaux (jamais commités)
 
@@ -40,3 +54,7 @@ Le script installe les dépendances (Homebrew sur macOS, apt sur Ubuntu), stow l
 `~/.zshrc` source `~/.zshrc.local` s'il existe.
 
 Un scaffold vide de `~/.gitconfig.local` est créé automatiquement par `install.sh`.
+
+## WezTerm et SSH
+
+La config WezTerm (`wezterm/`) n'est stowée que sur macOS. Sur les machines distantes, le `.zshrc` détecte automatiquement une connexion WezTerm via SSH (grâce à `$TERM=wezterm`) et pose `TERM_PROGRAM=WezTerm` et `COLORTERM=truecolor` sans nécessiter de configuration côté serveur.
