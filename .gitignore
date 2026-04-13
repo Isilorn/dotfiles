@@ -1,6 +1,9 @@
 # Never commit machine-local overrides
 *.local
 
+# Claude Code
+.claude/
+
 # macOS
 .DS_Store
 
