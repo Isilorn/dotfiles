@@ -118,6 +118,7 @@ install_packages() {
     has brew || die "Homebrew not found — install it first: https://brew.sh"
     run brew install --quiet \
       git git-delta starship stow zsh zinit fzf fd eza bat
+    run brew install --quiet --cask wezterm
     success "Homebrew packages installed"
 
   elif [[ "$OS" == Linux ]]; then
