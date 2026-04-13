@@ -48,6 +48,22 @@ vim ~/.gitconfig.local
 
 Ouvrir un nouveau shell.
 
+### Mise à jour
+
+Pour appliquer de nouvelles configs sur une machine déjà installée :
+
+```bash
+cd ~/.dotfiles
+git pull
+./install.sh --no-packages   # restow uniquement, pas de réinstallation apt/brew
+```
+
+Si de nouveaux packages ont été ajoutés à `install.sh` depuis la dernière installation, lancer sans `--no-packages` :
+
+```bash
+./install.sh
+```
+
 ### Options du script
 
 ```bash
