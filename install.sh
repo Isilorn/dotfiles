@@ -3,6 +3,33 @@ set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OS="$(uname -s)"
+PACKAGES=(git zsh tmux starship)
+
+# ---------------------------------------------------------------------------
+# Flags
+# ---------------------------------------------------------------------------
+DRY_RUN=false
+ROLLBACK=false
+
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run)  DRY_RUN=true ;;
+    --rollback) ROLLBACK=true ;;
+    --help|-h)
+      echo "Usage: $0 [--dry-run] [--rollback] [--no-packages] [--no-stow]"
+      echo ""
+      echo "  --dry-run    Show what would be done, without executing anything"
+      echo "  --rollback   Remove symlinks and revert shell changes"
+      echo "  --no-packages  Skip package installation"
+      echo "  --no-stow      Skip symlinking dotfiles"
+      exit 0 ;;
+    --no-packages) NO_PACKAGES=true ;;
+    --no-stow)     NO_STOW=true ;;
+  esac
+done
+
+NO_PACKAGES=${NO_PACKAGES:-false}
+NO_STOW=${NO_STOW:-false}
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -10,9 +37,75 @@ OS="$(uname -s)"
 info()    { printf '\033[1;34m==> %s\033[0m\n' "$*"; }
 success() { printf '\033[1;32m  ✔ %s\033[0m\n' "$*"; }
 warn()    { printf '\033[1;33m  ⚠ %s\033[0m\n' "$*"; }
+skip()    { printf '\033[2m  ↷ skip: %s\033[0m\n' "$*"; }
 die()     { printf '\033[1;31mERROR: %s\033[0m\n' "$*" >&2; exit 1; }
 
 has() { command -v "$1" &>/dev/null; }
+
+# Wraps any command: prints it in dry-run, executes it otherwise.
+run() {
+  if $DRY_RUN; then
+    printf '  \033[2m[dry-run] %s\033[0m\n' "$*"
+  else
+    "$@"
+  fi
+}
+
+# Like run() but prepends sudo.
+srun() {
+  if $DRY_RUN; then
+    printf '  \033[2m[dry-run] sudo %s\033[0m\n' "$*"
+  else
+    sudo "$@"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# Rollback
+# ---------------------------------------------------------------------------
+rollback() {
+  info "Rolling back dotfiles installation"
+
+  # 1. Unstow all packages
+  if has stow; then
+    for pkg in "${PACKAGES[@]}"; do
+      if [[ -d "$DOTFILES_DIR/$pkg" ]]; then
+        run stow --dir="$DOTFILES_DIR" --target="$HOME" -D "$pkg" 2>/dev/null \
+          && success "Unstowed $pkg" \
+          || warn "$pkg was not stowed (skipping)"
+      fi
+    done
+  else
+    warn "stow not found — symlinks not removed"
+  fi
+
+  # 2. Remove fd/bat compatibility symlinks (Linux only)
+  if [[ "$OS" == Linux ]]; then
+    for link in fd bat; do
+      local target="$HOME/.local/bin/$link"
+      if [[ -L "$target" ]]; then
+        run rm "$target" && success "Removed ~/.local/bin/$link"
+      fi
+    done
+  fi
+
+  # 3. Revert default shell to bash if it was changed to zsh
+  local bash_path; bash_path="$(command -v bash || true)"
+  if [[ -n "$bash_path" && "$SHELL" == "$(command -v zsh)" ]]; then
+    warn "Default shell is zsh — reverting to bash"
+    run chsh -s "$bash_path"
+  fi
+
+  # 4. Things we can't undo
+  echo ""
+  warn "Not removed (manual action required if desired):"
+  warn "  - Installed packages (git, delta, starship, fzf, eza, bat…)"
+  warn "  - zinit at \${XDG_DATA_HOME:-~/.local/share}/zinit"
+  warn "  - ~/.gitconfig.local (may contain your identity — kept intentionally)"
+
+  echo ""
+  success "Rollback complete."
+}
 
 # ---------------------------------------------------------------------------
 # Package installation
@@ -22,55 +115,44 @@ install_packages() {
 
   if [[ "$OS" == Darwin ]]; then
     has brew || die "Homebrew not found — install it first: https://brew.sh"
-    brew install --quiet \
-      git \
-      git-delta \
-      starship \
-      stow \
-      zsh \
-      zinit \
-      fzf \
-      fd \
-      eza \
-      bat
+    run brew install --quiet \
+      git git-delta starship stow zsh zinit fzf fd eza bat
     success "Homebrew packages installed"
 
   elif [[ "$OS" == Linux ]]; then
     has apt-get || die "apt not found — only Ubuntu/Debian supported on Linux"
-    sudo apt-get update -qq
-    sudo apt-get install -y --no-install-recommends \
-      git \
-      git-delta \
-      starship \
-      stow \
-      zsh \
-      fzf \
-      fd-find \
-      eza \
-      bat \
-      curl
+    srun apt-get update -qq
+    srun apt-get install -y --no-install-recommends \
+      git git-delta starship stow zsh fzf fd-find eza bat curl
     success "apt packages installed"
 
     # fd and bat ship with different binary names on Ubuntu
-    [[ ! -e ~/.local/bin/fd  ]] && { mkdir -p ~/.local/bin; ln -sf "$(command -v fdfind)" ~/.local/bin/fd; }
-    [[ ! -e ~/.local/bin/bat ]] && { mkdir -p ~/.local/bin; ln -sf "$(command -v batcat)" ~/.local/bin/bat; }
+    mkdir -p "$HOME/.local/bin"
+    if [[ ! -e ~/.local/bin/fd ]] && has fdfind; then
+      run ln -sf "$(command -v fdfind)" ~/.local/bin/fd
+      success "Symlinked fdfind → ~/.local/bin/fd"
+    fi
+    if [[ ! -e ~/.local/bin/bat ]] && has batcat; then
+      run ln -sf "$(command -v batcat)" ~/.local/bin/bat
+      success "Symlinked batcat → ~/.local/bin/bat"
+    fi
   else
     die "Unsupported OS: $OS"
   fi
 }
 
 # ---------------------------------------------------------------------------
-# zinit (Linux only — macOS gets it via Homebrew above)
+# zinit (Linux only — macOS gets it via Homebrew)
 # ---------------------------------------------------------------------------
 install_zinit() {
   if [[ "$OS" == Linux ]]; then
-    ZINIT_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/zinit/zinit.git"
-    if [[ ! -f "$ZINIT_HOME/zinit.zsh" ]]; then
+    local zinit_home="${XDG_DATA_HOME:-$HOME/.local/share}/zinit/zinit.git"
+    if [[ ! -f "$zinit_home/zinit.zsh" ]]; then
       info "Installing zinit (standalone)"
-      git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
-      success "zinit installed at $ZINIT_HOME"
+      run git clone https://github.com/zdharma-continuum/zinit.git "$zinit_home"
+      success "zinit installed"
     else
-      success "zinit already present"
+      skip "zinit already present"
     fi
   fi
 }
@@ -80,12 +162,11 @@ install_zinit() {
 # ---------------------------------------------------------------------------
 stow_packages() {
   info "Stowing dotfiles"
-  has stow || die "stow not found — run package install first"
+  $DRY_RUN || has stow || die "stow not found — run package install first"
 
-  local packages=(git zsh tmux starship)
-  for pkg in "${packages[@]}"; do
+  for pkg in "${PACKAGES[@]}"; do
     if [[ -d "$DOTFILES_DIR/$pkg" ]]; then
-      stow --dir="$DOTFILES_DIR" --target="$HOME" --restow "$pkg"
+      run stow --dir="$DOTFILES_DIR" --target="$HOME" --restow "$pkg"
       success "$pkg stowed"
     else
       warn "$pkg directory not found, skipping"
@@ -94,13 +175,14 @@ stow_packages() {
 }
 
 # ---------------------------------------------------------------------------
-# ~/.gitconfig.local scaffold (machine-specific identity)
+# ~/.gitconfig.local scaffold
 # ---------------------------------------------------------------------------
 setup_gitconfig_local() {
   local local_cfg="$HOME/.gitconfig.local"
   if [[ ! -f "$local_cfg" ]]; then
     info "Creating ~/.gitconfig.local scaffold"
-    cat > "$local_cfg" <<'EOF'
+    if ! $DRY_RUN; then
+      cat > "$local_cfg" <<'EOF'
 # Machine-specific git identity — never committed to dotfiles
 [user]
 	name  = Your Name
@@ -111,9 +193,12 @@ setup_gitconfig_local() {
 # [commit]
 # 	gpgsign = true
 EOF
+    else
+      printf '  \033[2m[dry-run] create ~/.gitconfig.local scaffold\033[0m\n'
+    fi
     warn "Edit ~/.gitconfig.local to set your name and email"
   else
-    success "~/.gitconfig.local already exists"
+    skip "~/.gitconfig.local already exists"
   fi
 }
 
@@ -124,15 +209,15 @@ set_default_shell() {
   local zsh_path
   zsh_path="$(command -v zsh)"
   if [[ "$SHELL" != "$zsh_path" ]]; then
-    info "Setting default shell to zsh ($zsh_path)"
+    info "Setting default shell to zsh"
     if [[ "$OS" == Linux ]]; then
-      # Add to /etc/shells if not present
-      grep -qxF "$zsh_path" /etc/shells || echo "$zsh_path" | sudo tee -a /etc/shells >/dev/null
+      grep -qxF "$zsh_path" /etc/shells \
+        || { srun tee -a /etc/shells <<< "$zsh_path" >/dev/null; }
     fi
-    chsh -s "$zsh_path"
+    run chsh -s "$zsh_path"
     success "Default shell set to zsh (restart your session)"
   else
-    success "zsh is already the default shell"
+    skip "zsh is already the default shell"
   fi
 }
 
@@ -140,28 +225,22 @@ set_default_shell() {
 # Main
 # ---------------------------------------------------------------------------
 main() {
-  local skip_packages=false
-  local skip_stow=false
-
-  for arg in "$@"; do
-    case "$arg" in
-      --no-packages) skip_packages=true ;;
-      --no-stow)     skip_stow=true ;;
-      --help|-h)
-        echo "Usage: $0 [--no-packages] [--no-stow]"
-        echo "  --no-packages  Skip package installation"
-        echo "  --no-stow      Skip symlinking dotfiles"
-        exit 0 ;;
-    esac
-  done
-
   echo ""
-  printf '\033[1m  Dotfiles installer — %s/%s\033[0m\n' "$OS" "$(uname -m)"
+  if $DRY_RUN; then
+    printf '\033[1m  Dotfiles installer — %s/%s  \033[33m[DRY RUN — nothing will be modified]\033[0m\n' "$OS" "$(uname -m)"
+  else
+    printf '\033[1m  Dotfiles installer — %s/%s\033[0m\n' "$OS" "$(uname -m)"
+  fi
   echo ""
 
-  $skip_packages || install_packages
+  if $ROLLBACK; then
+    rollback
+    exit 0
+  fi
+
+  $NO_PACKAGES || install_packages
   install_zinit
-  $skip_stow     || stow_packages
+  $NO_STOW     || stow_packages
   setup_gitconfig_local
   set_default_shell
 
