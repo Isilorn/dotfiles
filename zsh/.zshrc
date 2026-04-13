@@ -140,7 +140,8 @@ _set_titles() {
 }
 
 _title_precmd() {
-  _set_titles "ssh ${USER}@${HOST%%.*}: ${PWD/#$HOME/~}"
+  local prefix="${SSH_TTY:+ssh }"
+  _set_titles "${prefix}${USER}@${HOST%%.*}: ${PWD/#$HOME/~}"
 }
 
 _title_preexec() {
