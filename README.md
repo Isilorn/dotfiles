@@ -16,6 +16,21 @@ Stack : `zsh` · `zinit` · `git` + `delta` · `tmux` · `starship` · `wezterm`
 
 ## Installation
 
+### Prérequis — clé SSH GitHub (toutes les machines)
+
+Le repo étant privé, il faut une clé SSH autorisée sur GitHub avant de pouvoir cloner.
+
+```bash
+# Générer une clé ed25519 (si absente)
+ssh-keygen -t ed25519 -C "7522688+Isilorn@users.noreply.github.com"
+
+# Afficher la clé publique à copier dans GitHub → Settings → SSH keys
+cat ~/.ssh/id_ed25519.pub
+
+# Vérifier l'accès
+ssh -T git@github.com
+```
+
 ### macOS (arm64)
 
 1. Installer [Homebrew](https://brew.sh) si absent :
