@@ -199,8 +199,9 @@ install_packages() {
   elif [[ "$OS" == Linux ]]; then
     has apt-get || die "apt not found — only Ubuntu/Debian supported on Linux"
     srun apt-get update -qq
+    # starship n'est pas dans les dépôts apt — installé séparément ci-dessous
     srun apt-get install -y --no-install-recommends \
-      git git-delta starship stow zsh fzf fd-find eza bat curl
+      git git-delta stow zsh fzf fd-find eza bat curl
     success "apt packages installed"
 
     mkdir -p "$HOME/.local/bin"
@@ -214,6 +215,22 @@ install_packages() {
     fi
   else
     die "Unsupported OS: $OS"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# starship (Linux only — macOS gets it via Homebrew)
+# Pas dans les dépôts apt — installé via le script officiel
+# ---------------------------------------------------------------------------
+install_starship() {
+  if [[ "$OS" == Linux ]]; then
+    if has starship; then
+      skip "starship already installed ($(starship --version))"
+    else
+      info "Installing starship (official script)"
+      run sh -c "$(curl -sS https://starship.rs/install.sh)" -- --yes
+      success "starship installed"
+    fi
   fi
 }
 
@@ -320,6 +337,7 @@ main() {
   fi
 
   $NO_PACKAGES || install_packages
+  $NO_PACKAGES || install_starship
   install_zinit
   $NO_STOW     || stow_packages
   setup_gitconfig_local
