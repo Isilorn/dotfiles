@@ -4,6 +4,7 @@ set -euo pipefail
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OS="$(uname -s)"
 PACKAGES=(git zsh tmux starship)
+[[ "$(uname -s)" == Darwin ]] && PACKAGES+=(wezterm)
 
 # ---------------------------------------------------------------------------
 # Flags

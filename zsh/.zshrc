@@ -75,6 +75,15 @@ if command -v bat &>/dev/null; then
 fi
 
 # ---------------------------------------------------------------------------
+# Terminal detection — WezTerm over SSH
+# TERM=wezterm is negotiated by WezTerm automatically; TERM_PROGRAM is set
+# locally via set_environment_variables but not forwarded by SSH by default.
+# ---------------------------------------------------------------------------
+if [[ -n "$SSH_TTY" && "$TERM" == wezterm && -z "$TERM_PROGRAM" ]]; then
+  export TERM_PROGRAM="WezTerm"
+fi
+
+# ---------------------------------------------------------------------------
 # Prompt — starship
 # ---------------------------------------------------------------------------
 command -v starship &>/dev/null && eval "$(starship init zsh)"
