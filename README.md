@@ -65,15 +65,38 @@ Si des fichiers existent déjà (`~/.zshrc`, `~/.gitconfig`, etc.), `install.sh`
 
 ## Fichiers locaux (jamais commités)
 
-| Fichier | Contenu |
-|---|---|
-| `~/.gitconfig.local` | `user.name`, `user.email`, GPG signing |
-| `~/.zshrc.local` | Variables d'environnement, PATH et alias propres à la machine |
+### `~/.gitconfig.local`
 
-`~/.gitconfig` inclut `~/.gitconfig.local` via `[include]`.  
-`~/.zshrc` source `~/.zshrc.local` s'il existe.
+Créé automatiquement par `install.sh` avec un scaffold vide. Contient tout ce qui est spécifique à la machine ou à l'identité — jamais commité.
 
-Un scaffold vide de `~/.gitconfig.local` est créé automatiquement par `install.sh`.
+```ini
+[user]
+    name  = Isilorn
+    email = 7522688+Isilorn@users.noreply.github.com
+
+# Signature GPG des commits (optionnel)
+# [user]
+#     signingkey = ABCDEF1234567890
+# [commit]
+#     gpgsign = true
+
+# Alias propres à cette machine (optionnel)
+# [alias]
+#     work = "!cd ~/work && code ."
+```
+
+`~/.gitconfig` inclut ce fichier en fin de configuration via `[include]`, ce qui lui permet d'écraser n'importe quel réglage global.
+
+### `~/.zshrc.local`
+
+Sourcé en fin de `.zshrc` s'il existe. Pour tout ce qui ne doit pas être partagé entre machines :
+
+```zsh
+# Exemple — variables d'environnement, PATH, alias spécifiques
+export WORK_DIR=~/clients
+export KUBECONFIG=~/.kube/config-prod
+alias vpn='sudo openconnect vpn.example.com'
+```
 
 ## Aliases
 
