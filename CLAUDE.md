@@ -71,11 +71,12 @@ Avant de fermer, toujours :
 2. Mettre à jour `MEMORY.md` (index)
 3. Résumer ce qui a été accompli et ce qui reste à faire, pour que la prochaine session puisse reprendre sans friction
 
-### Utilisation de subagents
+### Utilisation des subagents
 
-Proposer un subagent (via l'outil `Agent`) quand :
-- Une collecte d'informations est longue et prévisible (exploration de codebase, recherche multi-fichiers)
-- Une tâche est clairement indépendante du contexte courant
-- Le résultat attendu est un rapport ou une synthèse, pas une action directe
+Les subagents sont configurés en Haiku. Proposer proactivement de déléguer à un subagent (`Agent` tool) dans les situations suivantes :
+- **Collecte longue et prévisible** : récupérer des artefacts sur plusieurs hôtes distants, lire de nombreux fichiers de logs, exécuter des séquences SSH dont le résultat sera volumineux. Utiliser `general-purpose` ou `Explore`.
+- **Exploration large du repo** : quand la tâche nécessite plus de 3-4 recherches Glob/Grep indépendantes. Utiliser `Explore`.
+- **Recherche documentaire** : questions sur Claude Code, l'API Anthropic, les SDKs. Utiliser `claude-code-guide`.
+- **Tâches parallélisables** : deux collectes indépendantes peuvent être lancées en parallèle dans deux subagents simultanés.
 
-Ne pas utiliser de subagent pour des tâches courtes, des edits ciblés, ou des questions simples.
+Ne pas déléguer à un subagent les analyses et diagnostics complexes qui nécessitent le contexte complet de la session — ces tâches restent dans le contexte principal.
