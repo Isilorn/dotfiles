@@ -140,12 +140,12 @@ _set_titles() {
 }
 
 _title_precmd() {
-  _set_titles "ssh ${USER}@${HOST%%.*}"
+  _set_titles "ssh ${USER}@${HOST%%.*}: ${PWD/#$HOME/~}"
 }
 
 _title_preexec() {
   local cmd=("${(z)1}")
-  _set_titles "${cmd[1]} ${PWD:t}"
+  _set_titles "${cmd[1]} ${PWD/#$HOME/~}"
 }
 
 add-zsh-hook precmd  _title_precmd
