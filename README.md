@@ -16,19 +16,44 @@ Stack : `zsh` · `zinit` · `git` + `delta` · `tmux` · `starship` · `wezterm`
 
 ## Installation
 
-```bash
-git clone git@github.com:Isilorn/dotfiles.git ~/.dotfiles
-cd ~/.dotfiles
-./install.sh
-```
+### macOS (arm64)
 
-Le script :
-1. Installe les dépendances (Homebrew sur macOS, apt sur Ubuntu)
-2. **Sauvegarde** les fichiers existants avant de les remplacer
-3. Stow les packages (crée les symlinks dans `$HOME`)
-4. Configure zsh comme shell par défaut
+1. Installer [Homebrew](https://brew.sh) si absent :
+   ```bash
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   ```
 
-### Options
+2. Cloner et lancer le script :
+   ```bash
+   git clone git@github.com:Isilorn/dotfiles.git ~/.dotfiles
+   cd ~/.dotfiles
+   ./install.sh
+   ```
+
+3. Renseigner l'identité git locale :
+   ```bash
+   vim ~/.gitconfig.local
+   ```
+
+4. Ouvrir un nouveau shell — zsh est maintenant le shell par défaut.
+
+### Ubuntu / Bluemoon
+
+1. Cloner et lancer le script (git est supposé présent) :
+   ```bash
+   git clone git@github.com:Isilorn/dotfiles.git ~/.dotfiles
+   cd ~/.dotfiles
+   ./install.sh
+   ```
+
+2. Renseigner l'identité git locale :
+   ```bash
+   vim ~/.gitconfig.local
+   ```
+
+3. Ouvrir un nouveau shell.
+
+### Options du script
 
 ```bash
 ./install.sh --dry-run      # aperçu complet sans rien modifier
