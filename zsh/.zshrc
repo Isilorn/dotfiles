@@ -64,14 +64,51 @@ alias ...='cd ../..'
 alias ll='ls -lAh'
 alias la='ls -A'
 
+# Listing — eza si dispo, sinon ls standard
 if command -v eza &>/dev/null; then
   alias ls='eza --group-directories-first'
   alias ll='eza -lah --group-directories-first --git'
   alias lt='eza --tree --level=2'
 fi
 
+# Pager — bat si dispo
 if command -v bat &>/dev/null; then
   alias cat='bat --paging=never'
+fi
+
+# Tree avec couleurs
+if command -v tree &>/dev/null; then
+  alias tree='tree -C'
+fi
+
+# Moniteur système — btop > htop > top
+if command -v btop &>/dev/null; then
+  alias top='btop'
+elif command -v htop &>/dev/null; then
+  alias top='htop'
+fi
+
+# Disk usage
+if command -v ncdu &>/dev/null; then
+  alias ncdu='ncdu --color dark -rr'   # -rr : pas de suppression accidentelle
+fi
+alias duh='du -sh -- * | sort -h'      # taille des éléments du répertoire courant
+
+# JSON — jq avec couleurs
+if command -v jq &>/dev/null; then
+  alias jq='jq -C'
+fi
+
+# Réseau
+alias ports='ss -tlnp'                 # ports en écoute (TCP)
+alias myip='curl -s ifconfig.me'       # IP publique
+
+# Python — Ubuntu n'expose pas "python", seulement "python3"
+if command -v python3 &>/dev/null && ! command -v python &>/dev/null; then
+  alias python='python3'
+fi
+if command -v pip3 &>/dev/null && ! command -v pip &>/dev/null; then
+  alias pip='pip3'
 fi
 
 # ---------------------------------------------------------------------------
