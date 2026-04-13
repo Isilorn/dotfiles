@@ -122,14 +122,31 @@ if command -v pip3 &>/dev/null && ! command -v pip &>/dev/null; then
 fi
 
 # ---------------------------------------------------------------------------
-# Titre du terminal (séquences OSC 0) — mis à jour en temps réel
-#   precmd  → user@host: /chemin   (avant chaque prompt)
-#   preexec → commande en cours    (pendant l'exécution)
+# Titre unifié Tmux + WezTerm
+#   precmd  → "ssh user@host"        (invite de commande)
+#   preexec → "commande dossier"     (pendant l'exécution)
+#
+# _set_titles envoie :
+#   \ek...\e\\ → renomme la fenêtre tmux (#W)
+#   \e]0;...\a → OSC 0 pour WezTerm (title bar / onglet)
+# tmux propage ensuite #W vers WezTerm via set-titles-string "#W"
 # ---------------------------------------------------------------------------
 autoload -Uz add-zsh-hook
 
-_title_precmd()  { printf '\e]0;%s@%s: %s\a' "$USER" "${HOST%%.*}" "${PWD/#$HOME/~}"; }
-_title_preexec() { printf '\e]0;%s@%s: %s\a' "$USER" "${HOST%%.*}" "$1"; }
+_set_titles() {
+  local title="$1"
+  [[ -n "$TMUX" ]] && printf '\ek%s\e\\' "$title"
+  printf '\e]0;%s\a' "$title"
+}
+
+_title_precmd() {
+  _set_titles "ssh ${USER}@${HOST%%.*}"
+}
+
+_title_preexec() {
+  local cmd=("${(z)1}")
+  _set_titles "${cmd[1]} ${PWD:t}"
+}
 
 add-zsh-hook precmd  _title_precmd
 add-zsh-hook preexec _title_preexec
