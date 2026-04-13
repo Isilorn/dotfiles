@@ -16,21 +16,6 @@ Stack : `zsh` · `zinit` · `git` + `delta` · `tmux` · `starship` · `wezterm`
 
 ## Installation
 
-### Prérequis — clé SSH GitHub (toutes les machines)
-
-Le repo étant privé, il faut une clé SSH autorisée sur GitHub avant de pouvoir cloner.
-
-```bash
-# Générer une clé ed25519 (si absente)
-ssh-keygen -t ed25519 -C "7522688+Isilorn@users.noreply.github.com"
-
-# Afficher la clé publique à copier dans GitHub → Settings → SSH keys
-cat ~/.ssh/id_ed25519.pub
-
-# Vérifier l'accès
-ssh -T git@github.com
-```
-
 ### macOS (arm64)
 
 1. Installer [Homebrew](https://brew.sh) si absent :
@@ -40,7 +25,7 @@ ssh -T git@github.com
 
 2. Cloner et lancer le script :
    ```bash
-   git clone git@github.com:Isilorn/dotfiles.git ~/.dotfiles
+   git clone https://github.com/Isilorn/dotfiles.git ~/.dotfiles
    cd ~/.dotfiles
    ./install.sh
    ```
@@ -54,19 +39,14 @@ ssh -T git@github.com
 
 ### Ubuntu / Bluemoon
 
-1. Cloner et lancer le script (git est supposé présent) :
-   ```bash
-   git clone git@github.com:Isilorn/dotfiles.git ~/.dotfiles
-   cd ~/.dotfiles
-   ./install.sh
-   ```
+```bash
+git clone https://github.com/Isilorn/dotfiles.git ~/.dotfiles
+cd ~/.dotfiles
+./install.sh
+vim ~/.gitconfig.local
+```
 
-2. Renseigner l'identité git locale :
-   ```bash
-   vim ~/.gitconfig.local
-   ```
-
-3. Ouvrir un nouveau shell.
+Ouvrir un nouveau shell.
 
 ### Options du script
 
