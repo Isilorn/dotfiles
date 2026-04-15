@@ -77,6 +77,13 @@ backup_package() {
     local target="$HOME/$rel"
 
     if [[ -e "$target" && ! -L "$target" ]]; then
+      # Skip files that are already inside the dotfiles repo (reached via a
+      # directory symlink created by stow on a previous run).
+      local real_target
+      real_target="$(realpath "$target" 2>/dev/null || echo "$target")"
+      if [[ "$real_target" == "$DOTFILES_DIR"/* ]]; then
+        continue
+      fi
       local dest="$BACKUP_DIR/$rel"
       if $DRY_RUN; then
         printf '  \033[2m[dry-run] backup %s → %s\033[0m\n' "$target" "$dest"
