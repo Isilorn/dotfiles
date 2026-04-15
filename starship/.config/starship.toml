@@ -4,22 +4,22 @@
 format = """
 $username$hostname$directory$git_branch$git_status$sudo$jobs$cmd_duration$status$line_break$character"""
 
-command_timeout = 500   # ms — évite les ralentissements sur NFS/SSHFS
+command_timeout = 500   # ms — avoids slowdowns on NFS/SSHFS
 
 # ---------------------------------------------------------------------------
-# Identité — toujours visible (sysadmin sur plusieurs machines)
+# Identity — always visible (sysadmin across multiple machines)
 # ---------------------------------------------------------------------------
 [username]
 show_always = true
 format    = "[$user]($style)@"
 style_user = "bold cyan"
-style_root = "bold red"      # rouge si root, inratable
+style_root = "bold red"      # red when root — hard to miss
 
 [hostname]
 ssh_only = false
 format   = "[$hostname]($style) "
 style    = "bold cyan"
-trim_at  = "."               # bluemoon.local → bluemoon
+trim_at  = "."               # strip domain suffix: bluemoon.local → bluemoon
 
 # ---------------------------------------------------------------------------
 # Navigation
@@ -28,12 +28,12 @@ trim_at  = "."               # bluemoon.local → bluemoon
 format            = "[$path]($style)[$read_only]($read_only_style) "
 style             = "bold blue"
 truncation_length = 4
-truncate_to_repo  = false    # pas de comportement "magique" dans les repos
+truncate_to_repo  = false    # no magic truncation inside repos
 read_only         = " "
 read_only_style   = "red"
 
 # ---------------------------------------------------------------------------
-# Git — apparaît uniquement dans un repo
+# Git — shown only inside a repo
 # ---------------------------------------------------------------------------
 [git_branch]
 format = "[$symbol$branch]($style) "
@@ -53,7 +53,7 @@ deleted    = "-${count}"
 stashed    = "≡"
 
 # ---------------------------------------------------------------------------
-# Infos système utiles en sysadmin
+# Sysadmin-relevant system info
 # ---------------------------------------------------------------------------
 [sudo]
 disabled = false
@@ -68,7 +68,7 @@ symbol    = " "
 threshold = 1
 
 [cmd_duration]
-min_time = 5_000             # affiche seulement si > 5s
+min_time = 5_000             # show only if command took more than 5s
 format   = "[${duration}]($style) "
 style    = "yellow"
 
@@ -77,10 +77,10 @@ disabled = false
 format   = '[$symbol$status]($style) '
 symbol   = "✗ "
 style    = "bold red"
-success_symbol = ""          # rien si succès, pas de bruit
+success_symbol = ""          # nothing on success — no noise
 
 # ---------------------------------------------------------------------------
-# Prompt final
+# Final prompt character
 # ---------------------------------------------------------------------------
 [character]
 success_symbol = "[❯](bold green)"

@@ -40,7 +40,7 @@ elif command -v fzf &>/dev/null; then
   if [[ -n "$_fzf_init" ]]; then
     eval "$_fzf_init"                       # fzf >= 0.48
   else
-    # fzf apt (Ubuntu) — version trop ancienne pour --zsh
+    # fzf apt (Ubuntu) — too old for --zsh flag
     [[ -f /usr/share/doc/fzf/examples/key-bindings.zsh ]] \
       && source /usr/share/doc/fzf/examples/key-bindings.zsh
     [[ -f /usr/share/doc/fzf/examples/completion.zsh ]] \
@@ -74,46 +74,46 @@ alias ...='cd ../..'
 alias ll='ls -lAh'
 alias la='ls -A'
 
-# Listing — eza si dispo, sinon ls standard
+# Listing — eza if available, fallback to standard ls
 if command -v eza &>/dev/null; then
   alias ls='eza --group-directories-first'
   alias ll='eza -lah --group-directories-first --git'
   alias lt='eza --tree --level=2'
 fi
 
-# Pager — bat si dispo
+# Pager — bat if available
 if command -v bat &>/dev/null; then
   alias cat='bat --paging=never'
 fi
 
-# Tree avec couleurs
+# Tree with colors
 if command -v tree &>/dev/null; then
   alias tree='tree -C'
 fi
 
-# Moniteur système — btop > htop > top
+# System monitor — btop > htop > top
 if command -v btop &>/dev/null; then
   alias top='btop'
 elif command -v htop &>/dev/null; then
   alias top='htop'
 fi
 
-# Disk usage
+# Disk usage — sizes of items in current directory
 if command -v ncdu &>/dev/null; then
-  alias ncdu='ncdu --color dark -rr'   # -rr : pas de suppression accidentelle
+  alias ncdu='ncdu --color dark -rr'   # -rr: no accidental deletion
 fi
-alias duh='du -sh -- * | sort -h'      # taille des éléments du répertoire courant
+alias duh='du -sh -- * | sort -h'
 
-# JSON — jq avec couleurs
+# JSON — jq with colors
 if command -v jq &>/dev/null; then
   alias jq='jq -C'
 fi
 
-# Réseau
-alias ports='ss -tlnp'                 # ports en écoute (TCP)
-alias myip='curl -s ifconfig.me'       # IP publique
+# Network
+alias ports='ss -tlnp'                 # listening TCP ports
+alias myip='curl -s ifconfig.me'       # public IP
 
-# Python — Ubuntu n'expose pas "python", seulement "python3"
+# Python — Ubuntu exposes python3 but not python
 if command -v python3 &>/dev/null && ! command -v python &>/dev/null; then
   alias python='python3'
 fi
@@ -122,14 +122,14 @@ if command -v pip3 &>/dev/null && ! command -v pip &>/dev/null; then
 fi
 
 # ---------------------------------------------------------------------------
-# Titre unifié Tmux + WezTerm
-#   precmd  → "ssh user@host"        (invite de commande)
-#   preexec → "commande dossier"     (pendant l'exécution)
+# Unified title — Tmux + WezTerm
+#   precmd  → "ssh user@host: path"  (at prompt)
+#   preexec → "command path"         (while running)
 #
-# _set_titles envoie :
-#   \ek...\e\\ → renomme la fenêtre tmux (#W)
-#   \e]0;...\a → OSC 0 pour WezTerm (title bar / onglet)
-# tmux propage ensuite #W vers WezTerm via set-titles-string "#W"
+# _set_titles sends:
+#   \ek...\e\\ → renames the tmux window (#W)
+#   \e]0;...\a → OSC 0 for WezTerm (title bar / tab)
+# tmux then propagates #W to WezTerm via set-titles-string "#W"
 # ---------------------------------------------------------------------------
 autoload -Uz add-zsh-hook
 
@@ -155,11 +155,24 @@ add-zsh-hook preexec _title_preexec
 # ---------------------------------------------------------------------------
 # Terminal detection — WezTerm over SSH
 # TERM=wezterm is negotiated by WezTerm automatically; TERM_PROGRAM is set
-# locally via set_environment_variables but not forwarded by SSH by default.
+# locally via set_environment_variables but is not forwarded by SSH by default.
 # ---------------------------------------------------------------------------
 if [[ -n "$SSH_TTY" && "$TERM" == wezterm ]]; then
   [[ -z "$TERM_PROGRAM" ]] && export TERM_PROGRAM="WezTerm"
   [[ -z "$COLORTERM"    ]] && export COLORTERM="truecolor"
+fi
+
+# ---------------------------------------------------------------------------
+# Auto-attach tmux — ask on login if a session is available
+# ---------------------------------------------------------------------------
+if [[ -z "$TMUX" ]] && command -v tmux &>/dev/null; then
+  sessions="$(tmux list-sessions 2>/dev/null)"
+  if [[ -n "$sessions" ]]; then
+    echo "$sessions"
+    read -q "?Attach to tmux session? [y/n] " && tmux attach
+    echo
+  fi
+  unset sessions
 fi
 
 # ---------------------------------------------------------------------------

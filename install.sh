@@ -61,11 +61,11 @@ srun() {
 }
 
 # ---------------------------------------------------------------------------
-# Backup — sauvegarde les fichiers existants avant de stower
+# Backup — save existing files before stowing
 #
-# Pour chaque fichier du package, calcule la cible dans $HOME.
-# Si c'est un fichier réel (pas un symlink stow), le déplace dans
-# $BACKUP_DIR avant que stow ne le remplace par un symlink.
+# For each file in the package, compute its target path under $HOME.
+# If it is a real file (not a stow symlink), move it to $BACKUP_DIR
+# before stow replaces it with a symlink.
 # ---------------------------------------------------------------------------
 backup_package() {
   local pkg="$1"
@@ -77,7 +77,7 @@ backup_package() {
     local target="$HOME/$rel"
 
     if [[ -e "$target" && ! -L "$target" ]]; then
-      # Skip files that are already inside the dotfiles repo (reached via a
+      # Skip files that already live inside the dotfiles repo (reached via a
       # directory symlink created by stow on a previous run).
       local real_target
       real_target="$(realpath "$target" 2>/dev/null || echo "$target")"
@@ -100,7 +100,7 @@ backup_package() {
 }
 
 # ---------------------------------------------------------------------------
-# Restore — restaure depuis le backup le plus récent
+# Restore — restore from the most recent backup
 # ---------------------------------------------------------------------------
 restore_backup() {
   local backup_root="$HOME/.dotfiles-backup"
@@ -110,7 +110,7 @@ restore_backup() {
     return
   fi
 
-  # Prend le backup le plus récent
+  # Take the most recent backup
   local latest
   latest="$(ls -t "$backup_root" | head -1)"
   local backup_dir="$backup_root/$latest"
@@ -121,7 +121,7 @@ restore_backup() {
     local rel="${file#"$backup_dir"/}"
     local target="$HOME/$rel"
 
-    # Retire le symlink stow s'il existe
+    # Remove the stow symlink if present
     [[ -L "$target" ]] && run rm "$target"
 
     if $DRY_RUN; then
@@ -133,7 +133,7 @@ restore_backup() {
     fi
   done < <(find "$backup_dir" -type f -print0)
 
-  # Supprime le dossier de backup s'il est vide
+  # Remove the backup directory if now empty
   if ! $DRY_RUN; then
     find "$backup_dir" -type d -empty -delete 2>/dev/null || true
     success "Backup $latest consommé"
@@ -182,10 +182,10 @@ rollback() {
   fi
 
   echo ""
-  warn "Non restauré (action manuelle si besoin) :"
-  warn "  - Packages installés (git, delta, starship, fzf, eza, bat…)"
+  warn "Not restored (manual action if needed):"
+  warn "  - Installed packages (git, delta, starship, fzf, eza, bat…)"
   warn "  - zinit (~/.local/share/zinit)"
-  warn "  - ~/.gitconfig.local (conservé intentionnellement)"
+  warn "  - ~/.gitconfig.local (kept intentionally)"
   echo ""
   success "Rollback terminé."
 }
@@ -206,7 +206,7 @@ install_packages() {
   elif [[ "$OS" == Linux ]]; then
     has apt-get || die "apt not found — only Ubuntu/Debian supported on Linux"
     srun apt-get update -qq
-    # starship n'est pas dans les dépôts apt — installé séparément ci-dessous
+    # starship is not in apt repos — installed separately below
     srun apt-get install -y --no-install-recommends \
       git git-delta stow zsh fzf fd-find eza bat curl
     success "apt packages installed"
@@ -227,7 +227,7 @@ install_packages() {
 
 # ---------------------------------------------------------------------------
 # starship (Linux only — macOS gets it via Homebrew)
-# Pas dans les dépôts apt — installé via le script officiel
+# Not in apt repos — installed via the official script
 # ---------------------------------------------------------------------------
 install_starship() {
   if [[ "$OS" == Linux ]]; then
@@ -258,7 +258,7 @@ install_zinit() {
 }
 
 # ---------------------------------------------------------------------------
-# Stow packages — backup d'abord, stow ensuite
+# Stow packages — backup first, then stow
 # ---------------------------------------------------------------------------
 stow_packages() {
   info "Stowing dotfiles"
@@ -275,12 +275,12 @@ stow_packages() {
   done
 
   if [[ -d "$BACKUP_DIR" ]]; then
-    info "Backup des fichiers originaux : $BACKUP_DIR"
+    info "Original files backed up to: $BACKUP_DIR"
   fi
 }
 
 # ---------------------------------------------------------------------------
-# ~/.gitconfig.local scaffold
+# ~/.gitconfig.local scaffold — created once, never overwritten
 # ---------------------------------------------------------------------------
 setup_gitconfig_local() {
   local local_cfg="$HOME/.gitconfig.local"
@@ -301,14 +301,14 @@ EOF
     else
       printf '  \033[2m[dry-run] create ~/.gitconfig.local scaffold\033[0m\n'
     fi
-    warn "Edit ~/.gitconfig.local to set your name and email"
+    warn "Fill in ~/.gitconfig.local with your name and email"
   else
     skip "~/.gitconfig.local already exists"
   fi
 }
 
 # ---------------------------------------------------------------------------
-# Default shell → zsh
+# Set default shell to zsh
 # ---------------------------------------------------------------------------
 set_default_shell() {
   local zsh_path
@@ -320,15 +320,15 @@ set_default_shell() {
         || { srun tee -a /etc/shells <<< "$zsh_path" >/dev/null; }
     fi
     run chsh -s "$zsh_path"
-    success "Default shell set to zsh (restart your session)"
+    success "Default shell set to zsh (open a new session to apply)"
   else
     skip "zsh is already the default shell"
   fi
 }
 
 # ---------------------------------------------------------------------------
-# zinit plugins — pre-téléchargement au premier login
-# Lance un shell zsh interactif non-affiché pour déclencher zinit
+# zinit plugins — pre-download on first login
+# Starts a hidden interactive zsh shell to trigger zinit
 # ---------------------------------------------------------------------------
 install_zinit_plugins() {
   info "Pre-installing zinit plugins"

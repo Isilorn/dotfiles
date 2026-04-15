@@ -53,30 +53,31 @@ dotfiles/
 - **No user identity in `.gitconfig`** — always machine-local via `~/.gitconfig.local`.
 - **Homebrew detection** — `.zshrc` auto-detects Homebrew prefix; no hardcoded paths.
 - **zinit** — Homebrew on macOS, standalone bootstrap on Linux.
-- **starship** — Homebrew on macOS, script officiel sur Linux (pas dans apt).
+- **starship** — Homebrew on macOS, official install script on Linux (not in apt).
 - **tmux prefix** — changed to `Ctrl-a`; splits use `|` and `-`.
-- **Titres tmux/WezTerm** — hooks zsh `precmd`/`preexec` envoient OSC 0 + `\ek` (tmux rename).
+- **tmux/WezTerm titles** — zsh `precmd`/`preexec` hooks emit OSC 0 + `\ek` (tmux rename).
+- **tmux auto-attach** — `.zshrc` asks at login if a session exists (y/n prompt).
 
-## Comportement attendu de Claude
+## Expected Claude behavior
 
-### Gestion de session
+### Session management
 
-Proposer de fermer et rouvrir la session quand :
-- Le contexte devient long et commence à dégrader la qualité des réponses
-- Une tâche importante vient d'être complétée (bon point de sauvegarde)
-- Une nouvelle thématique distincte démarre
+Suggest closing and reopening the session when:
+- The context becomes long and starts to degrade response quality
+- An important task has just been completed (good save point)
+- A distinct new topic begins
 
-Avant de fermer, toujours :
-1. Mettre à jour la mémoire dans `.claude/projects/.../memory/` (fichiers `user_*.md`, `feedback_*.md`, `project_*.md`)
-2. Mettre à jour `MEMORY.md` (index)
-3. Résumer ce qui a été accompli et ce qui reste à faire, pour que la prochaine session puisse reprendre sans friction
+Before closing, always:
+1. Update memory files in `.claude/projects/.../memory/` (`user_*.md`, `feedback_*.md`, `project_*.md`)
+2. Update `MEMORY.md` (index)
+3. Summarize what was done and what remains, so the next session can resume without friction
 
-### Utilisation des subagents
+### Subagent usage
 
-Les subagents sont configurés en Haiku. Proposer proactivement de déléguer à un subagent (`Agent` tool) dans les situations suivantes :
-- **Collecte longue et prévisible** : récupérer des artefacts sur plusieurs hôtes distants, lire de nombreux fichiers de logs, exécuter des séquences SSH dont le résultat sera volumineux. Utiliser `general-purpose` ou `Explore`.
-- **Exploration large du repo** : quand la tâche nécessite plus de 3-4 recherches Glob/Grep indépendantes. Utiliser `Explore`.
-- **Recherche documentaire** : questions sur Claude Code, l'API Anthropic, les SDKs. Utiliser `claude-code-guide`.
-- **Tâches parallélisables** : deux collectes indépendantes peuvent être lancées en parallèle dans deux subagents simultanés.
+Subagents are configured as Haiku. Proactively suggest delegating to a subagent (`Agent` tool) in these situations:
+- **Long, predictable data collection**: fetching artifacts from multiple remote hosts, reading many log files, running SSH sequences with large output. Use `general-purpose` or `Explore`.
+- **Broad repo exploration**: when the task requires more than 3-4 independent Glob/Grep searches. Use `Explore`.
+- **Documentation research**: questions about Claude Code, the Anthropic API, SDKs. Use `claude-code-guide`.
+- **Parallelizable tasks**: two independent collections can be launched in parallel in two simultaneous subagents.
 
-Ne pas déléguer à un subagent les analyses et diagnostics complexes qui nécessitent le contexte complet de la session — ces tâches restent dans le contexte principal.
+Do not delegate complex analyses and diagnostics that require the full session context — those stay in the main context.
