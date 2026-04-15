@@ -106,7 +106,7 @@ restore_backup() {
   local backup_root="$HOME/.dotfiles-backup"
 
   if [[ ! -d "$backup_root" ]] || [[ -z "$(ls -A "$backup_root" 2>/dev/null)" ]]; then
-    warn "Aucun backup trouvé dans ~/.dotfiles-backup/"
+    warn "No backup found in ~/.dotfiles-backup/"
     return
   fi
 
@@ -129,14 +129,14 @@ restore_backup() {
     else
       mkdir -p "$(dirname "$target")"
       mv "$file" "$target"
-      success "Restauré ~/$rel"
+      success "Restored ~/$rel"
     fi
   done < <(find "$backup_dir" -type f -print0)
 
   # Remove the backup directory if now empty
   if ! $DRY_RUN; then
     find "$backup_dir" -type d -empty -delete 2>/dev/null || true
-    success "Backup $latest consommé"
+    success "Backup $latest consumed"
   fi
 }
 
@@ -158,26 +158,26 @@ rollback() {
         else
           stow --dir="$DOTFILES_DIR" --target="$HOME" -D "$pkg" 2>/dev/null \
             && success "Unstowed $pkg" \
-            || skip "$pkg n'était pas stowé"
+            || skip "$pkg was not stowed"
         fi
       fi
     done
   else
-    warn "stow introuvable — symlinks non supprimés"
+    warn "stow not found — symlinks not removed"
   fi
 
-  # 3. Supprime les symlinks de compatibilité fd/bat (Linux)
+  # 3. Remove fd/bat compatibility symlinks (Linux)
   if [[ "$OS" == Linux ]]; then
     for link in fd bat; do
       local t="$HOME/.local/bin/$link"
-      [[ -L "$t" ]] && run rm "$t" && success "Supprimé ~/.local/bin/$link"
+      [[ -L "$t" ]] && run rm "$t" && success "Removed ~/.local/bin/$link"
     done
   fi
 
-  # 4. Rétablit bash comme shell par défaut si on avait changé vers zsh
+  # 4. Restore bash as default shell if we had switched to zsh
   local bash_path; bash_path="$(command -v bash || true)"
   if [[ -n "$bash_path" && "$SHELL" == "$(command -v zsh 2>/dev/null)" ]]; then
-    warn "Shell actuel : zsh — retour à bash"
+    warn "Current shell is zsh — reverting to bash"
     run chsh -s "$bash_path"
   fi
 
@@ -187,7 +187,7 @@ rollback() {
   warn "  - zinit (~/.local/share/zinit)"
   warn "  - ~/.gitconfig.local (kept intentionally)"
   echo ""
-  success "Rollback terminé."
+  success "Rollback complete."
 }
 
 # ---------------------------------------------------------------------------

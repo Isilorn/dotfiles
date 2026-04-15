@@ -10,15 +10,15 @@ r() {
 }
 
 r "Session normale"          "${BOLD}${CYAN}gtillit@bluemoon${R} ${BOLD}${BLUE}~/etc/nginx${R} "
-r "Repo git propre"          "${BOLD}${CYAN}gtillit@macbook${R} ${BOLD}${BLUE}~/projects/dotfiles${R} ${BOLD}${PURPLE}\ue0a0 main${R} "
-r "Repo git avec modifs"     "${BOLD}${CYAN}gtillit@macbook${R} ${BOLD}${BLUE}~/projects/dotfiles${R} ${BOLD}${PURPLE}\ue0a0 main${R} ${BOLD}${YELLOW}[!3 ?1 +2]${R} "
-r "Sudo en cache"            "${BOLD}${CYAN}gtillit@bluemoon${R} ${BOLD}${BLUE}/etc/nginx${R} ${BOLD}${RED}\uf023 ${R} "
-r "Jobs en background"       "${BOLD}${CYAN}gtillit@bluemoon${R} ${BOLD}${BLUE}~${R} ${BOLD}${YELLOW}\uf013 2${R} "
-r "Commande longue"          "${BOLD}${CYAN}gtillit@bluemoon${R} ${BOLD}${BLUE}~${R} ${YELLOW}45s${R} "
-r "Répertoire read-only"     "${BOLD}${CYAN}gtillit@bluemoon${R} ${BOLD}${BLUE}/etc/nginx \uf023 ${R} "
+r "Clean git repo"           "${BOLD}${CYAN}gtillit@macbook${R} ${BOLD}${BLUE}~/projects/dotfiles${R} ${BOLD}${PURPLE}\ue0a0 main${R} "
+r "Git repo with changes"    "${BOLD}${CYAN}gtillit@macbook${R} ${BOLD}${BLUE}~/projects/dotfiles${R} ${BOLD}${PURPLE}\ue0a0 main${R} ${BOLD}${YELLOW}[!3 ?1 +2]${R} "
+r "Sudo cached"              "${BOLD}${CYAN}gtillit@bluemoon${R} ${BOLD}${BLUE}/etc/nginx${R} ${BOLD}${RED}\uf023 ${R} "
+r "Background jobs"          "${BOLD}${CYAN}gtillit@bluemoon${R} ${BOLD}${BLUE}~${R} ${BOLD}${YELLOW}\uf013 2${R} "
+r "Long command"             "${BOLD}${CYAN}gtillit@bluemoon${R} ${BOLD}${BLUE}~${R} ${YELLOW}45s${R} "
+r "Read-only directory"      "${BOLD}${CYAN}gtillit@bluemoon${R} ${BOLD}${BLUE}/etc/nginx \uf023 ${R} "
 r "Root"                     "${BOLD}${RED}root@bluemoon${R} ${BOLD}${BLUE}/etc${R} "
 
-printf "${DIM}── Commande échouée ${R}\n"
+printf "${DIM}── Failed command ${R}\n"
 printf "${BOLD}${CYAN}gtillit@bluemoon${R} ${BOLD}${BLUE}~${R} ${BOLD}${RED}✗ 127${R} \n${RED}${BOLD}❯${R}\n\n"
 
-r "Tout en même temps"       "${BOLD}${CYAN}gtillit@bluemoon${R} ${BOLD}${BLUE}~/projects/api${R} ${BOLD}${PURPLE}\ue0a0 main${R} ${BOLD}${YELLOW}[⇡1 !2 ?3]${R} ${BOLD}${RED}\uf023 ${R} ${BOLD}${YELLOW}\uf013 2${R} ${YELLOW}1m32s${R} "
+r "Everything at once"       "${BOLD}${CYAN}gtillit@bluemoon${R} ${BOLD}${BLUE}~/projects/api${R} ${BOLD}${PURPLE}\ue0a0 main${R} ${BOLD}${YELLOW}[⇡1 !2 ?3]${R} ${BOLD}${RED}\uf023 ${R} ${BOLD}${YELLOW}\uf013 2${R} ${YELLOW}1m32s${R} "
