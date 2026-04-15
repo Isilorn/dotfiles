@@ -9,7 +9,7 @@ r() {
   printf "\n${GREEN}${BOLD}❯${R}\n\n"
 }
 
-r "Session normale"          "${BOLD}${CYAN}gtillit@bluemoon${R} ${BOLD}${BLUE}~/etc/nginx${R} "
+r "Normal session"           "${BOLD}${CYAN}gtillit@bluemoon${R} ${BOLD}${BLUE}~/etc/nginx${R} "
 r "Clean git repo"           "${BOLD}${CYAN}gtillit@macbook${R} ${BOLD}${BLUE}~/projects/dotfiles${R} ${BOLD}${PURPLE}\ue0a0 main${R} "
 r "Git repo with changes"    "${BOLD}${CYAN}gtillit@macbook${R} ${BOLD}${BLUE}~/projects/dotfiles${R} ${BOLD}${PURPLE}\ue0a0 main${R} ${BOLD}${YELLOW}[!3 ?1 +2]${R} "
 r "Sudo cached"              "${BOLD}${CYAN}gtillit@bluemoon${R} ${BOLD}${BLUE}/etc/nginx${R} ${BOLD}${RED}\uf023 ${R} "
