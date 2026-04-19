@@ -121,7 +121,7 @@ All aliases are conditional — they are only defined if the binary is present o
 | Alias | Replaces / Command | Required package |
 |---|---|---|
 | `ls` / `ll` / `lt` | eza with options | `eza` |
-| `cat` | `bat --paging=never` | `bat` |
+| `cat` | `bat --style=plain --paging=never` | `bat` |
 | `tree` | `tree -C` (colors) | `tree` |
 | `top` | `btop` → `htop` → `top` (fallback) | `btop` or `htop` |
 | `ncdu` | `ncdu --color dark -rr` | `ncdu` |
