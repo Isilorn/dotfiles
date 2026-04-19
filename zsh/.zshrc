@@ -83,7 +83,7 @@ fi
 
 # Pager — bat if available
 if command -v bat &>/dev/null; then
-  alias cat='bat --paging=never'
+  alias cat='bat --style=plain --paging=never'
 fi
 
 # Tree with colors
