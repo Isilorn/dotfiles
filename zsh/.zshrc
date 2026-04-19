@@ -110,7 +110,11 @@ if command -v jq &>/dev/null; then
 fi
 
 # Network
-alias ports='ss -tlnp'                 # listening TCP ports
+if command -v ss &>/dev/null; then
+  alias ports='ss -tlnp'
+else
+  alias ports='lsof -iTCP -sTCP:LISTEN -n -P'
+fi
 alias myip='curl -s ifconfig.me'       # public IP
 
 # Python — Ubuntu exposes python3 but not python
