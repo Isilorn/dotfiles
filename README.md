@@ -13,6 +13,7 @@ Stack: `zsh` · `zinit` · `git` + `delta` · `tmux` · `starship` · `wezterm`
 | `tmux/` | `~/.tmux.conf` | all |
 | `starship/` | `~/.config/starship.toml` | all |
 | `wezterm/` | `~/.config/wezterm/wezterm.lua` | macOS only |
+| `claude/` | `~/.claude/{settings.json,keybindings.json,statusline-command.sh}` | all |
 
 ## Installation
 
@@ -23,19 +24,24 @@ Stack: `zsh` · `zinit` · `git` + `delta` · `tmux` · `starship` · `wezterm`
    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
    ```
 
-2. Clone and run the install script:
+2. Install [Claude Code](https://claude.ai/code) if not present (not managed by `install.sh`):
+   ```bash
+   npm install -g @anthropic-ai/claude-code
+   ```
+
+3. Clone and run the install script:
    ```bash
    git clone https://github.com/Isilorn/dotfiles.git ~/.dotfiles
    cd ~/.dotfiles
    ./install.sh
    ```
 
-3. Fill in your local git identity:
+4. Fill in your local git identity:
    ```bash
    vim ~/.gitconfig.local
    ```
 
-4. Open a new shell — zsh is now the default shell.
+5. Open a new shell — zsh is now the default shell.
 
 ### Ubuntu / Bluemoon
 
@@ -103,6 +109,20 @@ Created automatically by `install.sh` as an empty scaffold. Contains everything 
 
 `~/.gitconfig` includes this file at the end via `[include]`, allowing it to override any global setting.
 
+### `~/.claude/settings.local.json`
+
+Machine-specific Claude Code permissions — never committed. Create manually if needed:
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(ssh:*)"
+    ]
+  }
+}
+```
+
 ### `~/.zshrc.local`
 
 Sourced at the end of `.zshrc` if present. For anything that should not be shared across machines:
@@ -127,7 +147,7 @@ All aliases are conditional — they are only defined if the binary is present o
 | `ncdu` | `ncdu --color dark -rr` | `ncdu` |
 | `jq` | `jq -C` (colors) | `jq` |
 | `duh` | `du -sh * \| sort -h` | — |
-| `ports` | `ss -tlnp` | — |
+| `ports` | `ss -tlnp` (Linux) / `lsof -iTCP -sTCP:LISTEN` (macOS) | — |
 | `myip` | `curl -s ifconfig.me` | `curl` |
 | `python` | `python3` | if `python` absent |
 | `pip` | `pip3` | if `pip` absent |
