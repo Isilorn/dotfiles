@@ -1,8 +1,10 @@
 # Never commit machine-local overrides
 *.local
 
-# Claude Code
+# Claude Code — ignore runtime state but version the stow package
 .claude/
+!claude/.claude/
+!claude/.claude/**
 
 # macOS
 .DS_Store
