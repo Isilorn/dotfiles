@@ -3,7 +3,7 @@ set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OS="$(uname -s)"
-PACKAGES=(git zsh tmux starship)
+PACKAGES=(git zsh tmux starship claude)
 [[ "$OS" == Darwin ]] && PACKAGES+=(wezterm)
 
 BACKUP_DIR="$HOME/.dotfiles-backup/$(date +%Y-%m-%dT%H:%M:%S)"
