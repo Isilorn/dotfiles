@@ -13,7 +13,7 @@ Stack: `zsh` · `zinit` · `git` + `delta` · `tmux` · `starship` · `wezterm`
 | `tmux/` | `~/.tmux.conf` | all |
 | `starship/` | `~/.config/starship.toml` | all |
 | `wezterm/` | `~/.config/wezterm/wezterm.lua` | macOS only |
-| `claude/` | `~/.claude/{keybindings.json,statusline-command.sh,settings.json.example}` | all |
+| `claude/` | `~/.claude/{settings.json,keybindings.json,statusline-command.sh}` | all |
 
 ## Installation
 
@@ -109,23 +109,19 @@ Created automatically by `install.sh` as an empty scaffold. Contains everything 
 
 `~/.gitconfig` includes this file at the end via `[include]`, allowing it to override any global setting.
 
-### `~/.claude/settings.json`
-
-Machine-local Claude Code settings — never committed (accumulates per-host permission grants). On a fresh machine, `install.sh` copies `settings.json.example` to `~/.claude/settings.json` if missing. Edit it directly; permissions added via `/permissions` land here.
-
 ### `~/.claude/settings.local.json`
 
-Additional machine-specific overrides — never committed. Create manually if needed:
+Machine-specific Claude Code overrides — never committed. The shared `settings.json` enables `bypassPermissions` globally; use this file to layer additional `additionalDirectories`, env vars or hooks that only apply to one machine:
 
 ```json
 {
   "permissions": {
-    "allow": [
-      "Bash(ssh:*)"
-    ]
+    "additionalDirectories": ["/opt/work-projects"]
   }
 }
 ```
+
+Project-level overrides go in `<project>/.claude/settings.local.json` (same merge rules).
 
 ### `~/.zshrc.local`
 

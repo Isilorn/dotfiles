@@ -1,0 +1,21 @@
+{
+  "model": "sonnet[1m]",
+  "theme": "dark",
+  "env": {
+    "CLAUDE_CODE_SUBAGENT_MODEL": "haiku"
+  },
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "additionalDirectories": [
+      "/tmp"
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline-command.sh"
+  },
+  "cleanupPeriodDays": 90,
+  "autoUpdates": true,
+  "agentPushNotifEnabled": true,
+  "effortLevel": "high"
+}

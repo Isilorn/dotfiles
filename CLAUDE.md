@@ -46,8 +46,7 @@ dotfiles/
 |---|---|
 | `~/.gitconfig.local` | `user.name`, `user.email`, GPG signing, machine aliases |
 | `~/.zshrc.local` | Machine-specific env vars, PATH additions, aliases |
-| `~/.claude/settings.json` | Claude Code settings (accumulates per-host permission grants); scaffolded from `settings.json.example` by `install.sh` |
-| `~/.claude/settings.local.json` | Optional extra Claude permissions overrides |
+| `~/.claude/settings.local.json` | Optional Claude Code overrides (extra `additionalDirectories`, env, hooks) |
 
 `~/.gitconfig` includes `~/.gitconfig.local` via `[include]`. `.zshrc` sources `~/.zshrc.local` if present.
 
@@ -60,7 +59,7 @@ dotfiles/
 - **tmux prefix** — changed to `Ctrl-a`; splits use `|` and `-`.
 - **tmux/WezTerm titles** — zsh `precmd`/`preexec` hooks emit OSC 0 + `\ek` (tmux rename).
 - **tmux auto-attach** — `.zshrc` asks at login if a session exists (y/n prompt).
-- **`~/.claude/settings.json` is machine-local** — gitignored; `install.sh` copies `settings.json.example` to it on a fresh machine. Permissions added via `/permissions` accumulate locally and never reach the repo.
+- **Claude Code uses `bypassPermissions`** — `settings.json` opts in to auto-approval globally; per-machine extras (e.g. extra `additionalDirectories`) go in `~/.claude/settings.local.json`.
 
 ## Expected Claude behavior
 
