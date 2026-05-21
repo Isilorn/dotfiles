@@ -308,6 +308,25 @@ EOF
 }
 
 # ---------------------------------------------------------------------------
+# ~/.claude/settings.json scaffold — created once from .example, never overwritten
+# ---------------------------------------------------------------------------
+setup_claude_settings() {
+  local settings="$HOME/.claude/settings.json"
+  local example="$HOME/.claude/settings.json.example"
+  if [[ ! -e "$settings" && -e "$example" ]]; then
+    info "Creating ~/.claude/settings.json from example"
+    if $DRY_RUN; then
+      printf '  \033[2m[dry-run] cp %s %s\033[0m\n' "$example" "$settings"
+    else
+      cp "$example" "$settings"
+      success "Created ~/.claude/settings.json (machine-local, not tracked)"
+    fi
+  else
+    skip "~/.claude/settings.json already exists"
+  fi
+}
+
+# ---------------------------------------------------------------------------
 # Set default shell to zsh
 # ---------------------------------------------------------------------------
 set_default_shell() {
@@ -362,6 +381,7 @@ main() {
   install_zinit
   $NO_STOW     || stow_packages
   setup_gitconfig_local
+  setup_claude_settings
   set_default_shell
   install_zinit_plugins
 

@@ -5,6 +5,8 @@
 .claude/
 !claude/.claude/
 !claude/.claude/**
+# settings.json contains machine-specific permissions, keep local-only
+claude/.claude/settings.json
 
 # macOS
 .DS_Store

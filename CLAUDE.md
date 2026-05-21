@@ -20,6 +20,7 @@ dotfiles/
 ├── zsh/      → ~/.zshrc
 ├── tmux/     → ~/.tmux.conf
 ├── starship/ → ~/.config/starship.toml
+├── claude/   → ~/.claude/{keybindings.json,statusline-command.sh,settings.json.example}
 └── wezterm/  → ~/.config/wezterm/wezterm.lua  (macOS only)
 ```
 
@@ -45,6 +46,8 @@ dotfiles/
 |---|---|
 | `~/.gitconfig.local` | `user.name`, `user.email`, GPG signing, machine aliases |
 | `~/.zshrc.local` | Machine-specific env vars, PATH additions, aliases |
+| `~/.claude/settings.json` | Claude Code settings (accumulates per-host permission grants); scaffolded from `settings.json.example` by `install.sh` |
+| `~/.claude/settings.local.json` | Optional extra Claude permissions overrides |
 
 `~/.gitconfig` includes `~/.gitconfig.local` via `[include]`. `.zshrc` sources `~/.zshrc.local` if present.
 
@@ -57,6 +60,7 @@ dotfiles/
 - **tmux prefix** — changed to `Ctrl-a`; splits use `|` and `-`.
 - **tmux/WezTerm titles** — zsh `precmd`/`preexec` hooks emit OSC 0 + `\ek` (tmux rename).
 - **tmux auto-attach** — `.zshrc` asks at login if a session exists (y/n prompt).
+- **`~/.claude/settings.json` is machine-local** — gitignored; `install.sh` copies `settings.json.example` to it on a fresh machine. Permissions added via `/permissions` accumulate locally and never reach the repo.
 
 ## Expected Claude behavior
 
