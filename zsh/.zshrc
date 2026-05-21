@@ -74,11 +74,16 @@ alias ...='cd ../..'
 alias ll='ls -lAh'
 alias la='ls -A'
 
-# Listing — eza if available, fallback to standard ls
+# Listing — keep `ls` as real ls (POSIX flags), add eza shortcuts on the side
 if command -v eza &>/dev/null; then
-  alias ls='eza --group-directories-first'
-  alias ll='eza -lah --group-directories-first --git'
-  alias lt='eza --tree --level=2'
+  EZA_BASE='eza --group-directories-first --git'
+  alias ll="$EZA_BASE -lah"                          # long, all, human
+  alias lt="$EZA_BASE --tree --level=2"              # tree (2 levels)
+  alias lltr="$EZA_BASE -lah --sort=oldest"          # ls -ltr equivalent (newest at bottom)
+  alias llt="$EZA_BASE -lah --sort=newest"           # newest first
+  alias lls="$EZA_BASE -lah --sort=size --reverse"   # largest first
+  alias lla="$EZA_BASE -lah@ --extended"             # long + xattrs / extended attrs
+  unset EZA_BASE
 fi
 
 # Pager — bat if available
