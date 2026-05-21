@@ -1,6 +1,5 @@
 {
-  "model": "sonnet[1m]",
-  "theme": "dark",
+  "cleanupPeriodDays": 90,
   "env": {
     "CLAUDE_CODE_SUBAGENT_MODEL": "haiku"
   },
@@ -10,12 +9,14 @@
       "/tmp"
     ]
   },
+  "model": "sonnet[1m]",
   "statusLine": {
     "type": "command",
     "command": "~/.claude/statusline-command.sh"
   },
-  "cleanupPeriodDays": 90,
-  "autoUpdates": true,
+  "effortLevel": "high",
+  "theme": "dark",
   "agentPushNotifEnabled": true,
-  "effortLevel": "high"
+  "autoUpdates": true,
+  "skipDangerousModePermissionPrompt": true
 }
