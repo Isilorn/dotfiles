@@ -33,6 +33,9 @@ fi
 zinit load  sunlei/zsh-ssh                  # smarter ssh host completions
 zinit snippet OMZP::git                     # git aliases from Oh-My-Zsh
 
+zinit ice blockf                            # let zinit manage fpath, not the plugin
+zinit light zsh-users/zsh-completions       # extra completion defs (docker, kubectl, …)
+
 autoload -Uz compinit && compinit           # init completion system (after compdefs above)
 
 zinit light Aloxaf/fzf-tab                  # fzf-driven fuzzy UI for the Tab menu
@@ -236,17 +239,16 @@ fi
 
 # ---------------------------------------------------------------------------
 # Tab key — context-aware menu vs history:
-#   - "menu-first" commands (rich completers: cd, ssh, git…) OR a current word
-#     that contains "/" (path navigation) → open the fzf-tab menu
+#   - command has a registered completer ($_comps, e.g. git/ssh/docker/…) OR a
+#     current word containing "/" (path navigation) → open the fzf-tab menu
 #   - anything else, when a grey history suggestion is shown → accept it
 #     (e.g. `./install.sh --no-packages`)
 #   - otherwise → open the menu (default file completion)
+# Using $_comps means it self-updates: any command that gains a completer
+# (e.g. via zsh-completions) becomes menu-first automatically — no list to keep.
 # Bound here, last, so it wins over fzf-tab's and fzf's own ^I bindings; the
 # Right arrow still accepts the grey suggestion directly too.
-# Extend _ZSH_MENU_FIRST to force the menu for more commands.
 # ---------------------------------------------------------------------------
-typeset -ga _ZSH_MENU_FIRST=(cd pushd z ls ll la eza tree ssh scp sftp rsync git docker kubectl)
-
 _tab_menu() {
   if (( $+widgets[fzf-tab-complete] )); then
     zle fzf-tab-complete                     # fuzzy fzf menu
@@ -260,8 +262,8 @@ _tab_menu() {
 _tab_complete_or_accept() {
   local first=${${(z)LBUFFER}[1]:t}          # basename of the command word
   local lastword=${LBUFFER##* }              # word currently being typed
-  if (( ${_ZSH_MENU_FIRST[(Ie)$first]} )) || [[ $lastword == */* ]]; then
-    _tab_menu                                # rich completer or path → menu
+  if (( ${+_comps[$first]} )) || [[ $lastword == */* ]]; then
+    _tab_menu                                # real completer or path → menu
   elif [[ -n $POSTDISPLAY ]]; then
     zle autosuggest-accept                   # otherwise take the grey suggestion
   else
