@@ -235,12 +235,16 @@ if [[ -z "$TMUX" ]] && command -v tmux &>/dev/null; then
 fi
 
 # ---------------------------------------------------------------------------
-# Tab key — always open the completion menu (fzf-tab). The grey history
-# suggestion is accepted with the Right arrow, not Tab. Bound here, last, so it
-# wins over fzf-tab's and fzf's own ^I bindings; falls back to fzf-completion
-# then plain completion if fzf-tab is unavailable.
+# Tab key — context-aware:
+#   - if there's a real completion (cd, ssh, git…) → open the fzf-tab menu
+#   - if completion yields nothing but a grey history suggestion is shown
+#     (e.g. `./install.sh --no-packages`) → accept the suggestion
+# Detected by running completion and checking whether the buffer changed.
+# Bound here, last, so it wins over fzf-tab's and fzf's own ^I bindings; the
+# Right arrow still accepts the grey suggestion directly too.
 # ---------------------------------------------------------------------------
-_tab_complete() {
+_tab_complete_or_accept() {
+  local _buf=$BUFFER _cur=$CURSOR
   if (( $+widgets[fzf-tab-complete] )); then
     zle fzf-tab-complete                     # fuzzy fzf menu
   elif (( $+widgets[fzf-completion] )); then
@@ -248,9 +252,13 @@ _tab_complete() {
   else
     zle expand-or-complete
   fi
+  # Completion changed nothing → fall back to the grey history suggestion.
+  if [[ $BUFFER == $_buf && $CURSOR == $_cur && -n $POSTDISPLAY ]]; then
+    zle autosuggest-accept
+  fi
 }
-zle -N _tab_complete
-bindkey '^I' _tab_complete                    # ^I = Tab
+zle -N _tab_complete_or_accept
+bindkey '^I' _tab_complete_or_accept          # ^I = Tab
 
 # ---------------------------------------------------------------------------
 # Prompt — starship
