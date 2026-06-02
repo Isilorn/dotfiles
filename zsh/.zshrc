@@ -135,17 +135,16 @@ fi
 #   precmd  → "ssh user@host: path"  (at prompt)
 #   preexec → "command path"         (while running)
 #
-# _set_titles sends:
-#   \ek...\e\\ → renames the tmux window (#W)
-#   \e]0;...\a → OSC 0 for WezTerm (title bar / tab)
-# tmux then propagates #W to WezTerm via set-titles-string "#W"
+# _set_titles sends OSC 0 (\e]0;...\a) → the pane title (#T).
+# tmux mirrors the pane title into the window name (#W) via
+# automatic-rename-format "#{pane_title}", then forwards #W to WezTerm.
+# This lets a long-running program's own OSC title (e.g. Claude's session
+# name) flow all the way to #W and the WezTerm tab while it runs.
 # ---------------------------------------------------------------------------
 autoload -Uz add-zsh-hook
 
 _set_titles() {
-  local title="$1"
-  [[ -n "$TMUX" ]] && printf '\ek%s\e\\' "$title"
-  printf '\e]0;%s\a' "$title"
+  printf '\e]0;%s\a' "$1"
 }
 
 _title_precmd() {
@@ -155,37 +154,11 @@ _title_precmd() {
 
 _title_preexec() {
   local cmd=("${(z)1}")
-  case "${cmd[1]}" in
-    cl)
-      # `cl <name> ...` → name the Claude session in the title.
-      # Bare `cl`, or `cl -<flag>` (e.g. --resume), falls back to repo/dir.
-      if [[ -n "${cmd[2]}" && "${cmd[2]}" != -* ]]; then
-        _set_titles "✻ ${cmd[2]}"
-      else
-        local repo="${$(git rev-parse --show-toplevel 2>/dev/null):t}"
-        _set_titles "✻ ${repo:-${PWD:t}}"
-      fi
-      ;;
-    claude)
-      local repo="${$(git rev-parse --show-toplevel 2>/dev/null):t}"
-      _set_titles "✻ ${repo:-${PWD:t}}"
-      ;;
-    *)
-      _set_titles "${cmd[1]} ${PWD/#$HOME/~}"
-      ;;
-  esac
+  _set_titles "${cmd[1]} ${PWD/#$HOME/~}"
 }
 
 add-zsh-hook precmd  _title_precmd
 add-zsh-hook preexec _title_preexec
-
-# `cl [name] [claude-args...]` — launch Claude Code with a window title.
-# The optional leading <name> (any non-flag first arg) is consumed by the
-# title hook above and stripped here; everything else is passed to claude.
-cl() {
-  [[ -n "$1" && "$1" != -* ]] && shift
-  command claude "$@"
-}
 
 # ---------------------------------------------------------------------------
 # Terminal detection — WezTerm over SSH
