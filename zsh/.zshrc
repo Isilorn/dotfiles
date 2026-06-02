@@ -155,11 +155,37 @@ _title_precmd() {
 
 _title_preexec() {
   local cmd=("${(z)1}")
-  _set_titles "${cmd[1]} ${PWD/#$HOME/~}"
+  case "${cmd[1]}" in
+    cl)
+      # `cl <name> ...` → name the Claude session in the title.
+      # Bare `cl`, or `cl -<flag>` (e.g. --resume), falls back to repo/dir.
+      if [[ -n "${cmd[2]}" && "${cmd[2]}" != -* ]]; then
+        _set_titles "✻ ${cmd[2]}"
+      else
+        local repo="${$(git rev-parse --show-toplevel 2>/dev/null):t}"
+        _set_titles "✻ ${repo:-${PWD:t}}"
+      fi
+      ;;
+    claude)
+      local repo="${$(git rev-parse --show-toplevel 2>/dev/null):t}"
+      _set_titles "✻ ${repo:-${PWD:t}}"
+      ;;
+    *)
+      _set_titles "${cmd[1]} ${PWD/#$HOME/~}"
+      ;;
+  esac
 }
 
 add-zsh-hook precmd  _title_precmd
 add-zsh-hook preexec _title_preexec
+
+# `cl [name] [claude-args...]` — launch Claude Code with a window title.
+# The optional leading <name> (any non-flag first arg) is consumed by the
+# title hook above and stripped here; everything else is passed to claude.
+cl() {
+  [[ -n "$1" && "$1" != -* ]] && shift
+  command claude "$@"
+}
 
 # ---------------------------------------------------------------------------
 # Terminal detection — WezTerm over SSH
