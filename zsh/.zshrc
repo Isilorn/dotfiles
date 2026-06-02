@@ -160,6 +160,25 @@ _title_preexec() {
 add-zsh-hook precmd  _title_precmd
 add-zsh-hook preexec _title_preexec
 
+# Wrapper claude — disable Claude's auto-generated "topic title" for fresh
+# sessions (so the preexec title "claude ~/path" stays), but keep it enabled
+# on resume/continue so a named session shows its name. The resume/continue
+# flag is detected at any position; all args are passed through unchanged.
+# Env is set per-invocation only (does not leak into the shell).
+claude() {
+  local keep_title=0 a
+  for a in "$@"; do
+    case $a in
+      --resume|--resume=*|-r|--continue|--continue=*|-c) keep_title=1 ;;
+    esac
+  done
+  if (( keep_title )); then
+    command claude "$@"
+  else
+    CLAUDE_CODE_DISABLE_TERMINAL_TITLE=1 command claude "$@"
+  fi
+}
+
 # ---------------------------------------------------------------------------
 # Terminal detection — WezTerm over SSH
 # TERM=wezterm is negotiated by WezTerm automatically; TERM_PROGRAM is set
