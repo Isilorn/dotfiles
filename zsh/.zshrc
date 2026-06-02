@@ -25,27 +25,40 @@ else
 fi
 
 # Plugins
+#   Load order matters for the completion stack:
+#   - compdef-defining plugins (zsh-ssh) before compinit
+#   - compinit before fzf-tab
+#   - fzf-tab before the widget-wrapping plugins (autosuggestions, highlighting)
+#   - zsh-syntax-highlighting strictly last
 zinit load  sunlei/zsh-ssh                  # smarter ssh host completions
-zinit light zsh-users/zsh-autosuggestions
-zinit light zsh-users/zsh-syntax-highlighting
 zinit snippet OMZP::git                     # git aliases from Oh-My-Zsh
+
+autoload -Uz compinit && compinit           # init completion system (after compdefs above)
+
+zinit light Aloxaf/fzf-tab                  # fzf-driven fuzzy UI for the Tab menu
+zinit light zsh-users/zsh-autosuggestions
+zinit light zsh-users/zsh-syntax-highlighting   # MUST stay last
 
 # ---------------------------------------------------------------------------
 # Completion — the Tab menu (distinct from the grey history autosuggestion)
-#   compinit runs AFTER the completion plugins above so their compdefs register.
 # ---------------------------------------------------------------------------
-autoload -Uz compinit && compinit
-
-zstyle ':completion:*' menu select                       # navigable menu (arrows)
 zstyle ':completion:*' matcher-list '' \
   'm:{a-zA-Z}={A-Za-z}' \
   'r:|[._-]=* r:|=*' \
   'l:|=* r:|=*'                                           # exact → case-insensitive → partial → substring
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}    # colorise like ls
 zstyle ':completion:*' group-name ''                     # group candidates by type
-zstyle ':completion:*:descriptions' format '%F{yellow}%d%f'
+zstyle ':completion:*:descriptions' format '%F{yellow}%d%f'  # also enables fzf-tab group support
+zstyle ':completion:*' menu no                           # disable zsh's menu → fzf-tab captures it
 zstyle ':completion:*' use-cache on                      # cache slow completions
 zstyle ':completion:*' cache-path "${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompcache"
+
+# fzf-tab tuning
+zstyle ':fzf-tab:*' switch-group '<' '>'                 # cycle candidate groups with < and >
+zstyle ':completion:*:git-checkout:*' sort false         # keep git ref order, don't sort
+zstyle ':fzf-tab:complete:cd:*' fzf-preview \
+  'eza -1 --color=always --group-directories-first "$realpath" 2>/dev/null || ls -1 "$realpath"'
+[[ -n "$TMUX" ]] && zstyle ':fzf-tab:*' fzf-command ftb-tmux-popup  # centered tmux popup in tmux
 
 # ---------------------------------------------------------------------------
 # fzf
@@ -221,13 +234,16 @@ fi
 
 # ---------------------------------------------------------------------------
 # Tab key — accept the grey autosuggestion if one is shown, else complete.
-# Bound here (after fzf, which rebinds ^I to fzf-completion) so it wins; it
-# falls back to fzf-completion to preserve fzf's `**<Tab>` trigger, then to
-# plain completion. ssh-host and other completions stay intact.
+# Bound here, last, so it wins over fzf-tab's and fzf's own ^I bindings; it
+# routes completion to fzf-tab (fuzzy menu), then fzf-completion, then plain
+# completion. ssh-host and other completions stay intact. Note: routing Tab to
+# fzf-tab supersedes fzf's `**<Tab>` trigger — every Tab is already fuzzy.
 # ---------------------------------------------------------------------------
 _tab_accept_or_complete() {
   if [[ -n "$POSTDISPLAY" ]]; then
-    zle autosuggest-accept
+    zle autosuggest-accept                  # accept the grey history suggestion
+  elif (( $+widgets[fzf-tab-complete] )); then
+    zle fzf-tab-complete                     # fuzzy fzf menu
   elif (( $+widgets[fzf-completion] )); then
     zle fzf-completion
   else
