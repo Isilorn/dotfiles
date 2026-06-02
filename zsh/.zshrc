@@ -59,7 +59,7 @@ zstyle ':completion:*:git-checkout:*' sort false         # keep git ref order, d
 zstyle ':fzf-tab:complete:cd:*' fzf-preview \
   'eza -1 --color=always --group-directories-first "$realpath" 2>/dev/null || ls -1 "$realpath"'
 [[ -n "$TMUX" ]] && zstyle ':fzf-tab:*' fzf-command ftb-tmux-popup  # centered tmux popup in tmux
-zstyle ':fzf-tab:*' popup-min-size 90 20                 # roomier popup (closer to the ssh-host fzf)
+zstyle ':fzf-tab:*' popup-min-size 70 14                 # floor size: not microscopic, not huge
 
 # ---------------------------------------------------------------------------
 # fzf
