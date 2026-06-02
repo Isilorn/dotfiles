@@ -260,7 +260,8 @@ _tab_menu() {
 }
 
 _tab_complete_or_accept() {
-  local first=${${(z)LBUFFER}[1]:t}          # basename of the command word
+  local -a words; words=(${(z)LBUFFER})      # split the line into words
+  local first=${words[1]:t}                  # basename of the command word
   local lastword=${LBUFFER##* }              # word currently being typed
   if (( ${+_comps[$first]} )) || [[ $lastword == */* ]]; then
     _tab_menu                                # real completer or path → menu
