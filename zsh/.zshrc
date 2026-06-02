@@ -59,6 +59,7 @@ zstyle ':completion:*:git-checkout:*' sort false         # keep git ref order, d
 zstyle ':fzf-tab:complete:cd:*' fzf-preview \
   'eza -1 --color=always --group-directories-first "$realpath" 2>/dev/null || ls -1 "$realpath"'
 [[ -n "$TMUX" ]] && zstyle ':fzf-tab:*' fzf-command ftb-tmux-popup  # centered tmux popup in tmux
+zstyle ':fzf-tab:*' popup-min-size 90 20                 # roomier popup (closer to the ssh-host fzf)
 
 # ---------------------------------------------------------------------------
 # fzf
@@ -233,16 +234,13 @@ if [[ -z "$TMUX" ]] && command -v tmux &>/dev/null; then
 fi
 
 # ---------------------------------------------------------------------------
-# Tab key — accept the grey autosuggestion if one is shown, else complete.
-# Bound here, last, so it wins over fzf-tab's and fzf's own ^I bindings; it
-# routes completion to fzf-tab (fuzzy menu), then fzf-completion, then plain
-# completion. ssh-host and other completions stay intact. Note: routing Tab to
-# fzf-tab supersedes fzf's `**<Tab>` trigger — every Tab is already fuzzy.
+# Tab key — always open the completion menu (fzf-tab). The grey history
+# suggestion is accepted with the Right arrow, not Tab. Bound here, last, so it
+# wins over fzf-tab's and fzf's own ^I bindings; falls back to fzf-completion
+# then plain completion if fzf-tab is unavailable.
 # ---------------------------------------------------------------------------
-_tab_accept_or_complete() {
-  if [[ -n "$POSTDISPLAY" ]]; then
-    zle autosuggest-accept                  # accept the grey history suggestion
-  elif (( $+widgets[fzf-tab-complete] )); then
+_tab_complete() {
+  if (( $+widgets[fzf-tab-complete] )); then
     zle fzf-tab-complete                     # fuzzy fzf menu
   elif (( $+widgets[fzf-completion] )); then
     zle fzf-completion
@@ -250,8 +248,8 @@ _tab_accept_or_complete() {
     zle expand-or-complete
   fi
 }
-zle -N _tab_accept_or_complete
-bindkey '^I' _tab_accept_or_complete          # ^I = Tab
+zle -N _tab_complete
+bindkey '^I' _tab_complete                    # ^I = Tab
 
 # ---------------------------------------------------------------------------
 # Prompt — starship
