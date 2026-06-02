@@ -31,6 +31,23 @@ zinit light zsh-users/zsh-syntax-highlighting
 zinit snippet OMZP::git                     # git aliases from Oh-My-Zsh
 
 # ---------------------------------------------------------------------------
+# Completion — the Tab menu (distinct from the grey history autosuggestion)
+#   compinit runs AFTER the completion plugins above so their compdefs register.
+# ---------------------------------------------------------------------------
+autoload -Uz compinit && compinit
+
+zstyle ':completion:*' menu select                       # navigable menu (arrows)
+zstyle ':completion:*' matcher-list '' \
+  'm:{a-zA-Z}={A-Za-z}' \
+  'r:|[._-]=* r:|=*' \
+  'l:|=* r:|=*'                                           # exact → case-insensitive → partial → substring
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}    # colorise like ls
+zstyle ':completion:*' group-name ''                     # group candidates by type
+zstyle ':completion:*:descriptions' format '%F{yellow}%d%f'
+zstyle ':completion:*' use-cache on                      # cache slow completions
+zstyle ':completion:*' cache-path "${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompcache"
+
+# ---------------------------------------------------------------------------
 # fzf
 # ---------------------------------------------------------------------------
 if [[ -f ~/.fzf.zsh ]]; then
@@ -201,6 +218,24 @@ if [[ -z "$TMUX" ]] && command -v tmux &>/dev/null; then
   fi
   unset sessions
 fi
+
+# ---------------------------------------------------------------------------
+# Tab key — accept the grey autosuggestion if one is shown, else complete.
+# Bound here (after fzf, which rebinds ^I to fzf-completion) so it wins; it
+# falls back to fzf-completion to preserve fzf's `**<Tab>` trigger, then to
+# plain completion. ssh-host and other completions stay intact.
+# ---------------------------------------------------------------------------
+_tab_accept_or_complete() {
+  if [[ -n "$POSTDISPLAY" ]]; then
+    zle autosuggest-accept
+  elif (( $+widgets[fzf-completion] )); then
+    zle fzf-completion
+  else
+    zle expand-or-complete
+  fi
+}
+zle -N _tab_accept_or_complete
+bindkey '^I' _tab_accept_or_complete          # ^I = Tab
 
 # ---------------------------------------------------------------------------
 # Prompt — starship
