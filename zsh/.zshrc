@@ -29,7 +29,7 @@ fi
 #   - compdef-defining plugins (zsh-ssh) before compinit
 #   - compinit before fzf-tab
 #   - fzf-tab before the widget-wrapping plugins (autosuggestions, highlighting)
-#   - zsh-syntax-highlighting strictly last
+#   - zsh-syntax-highlighting before zsh-history-substring-search (loaded last)
 zinit load  sunlei/zsh-ssh                  # smarter ssh host completions
 zinit snippet OMZP::git                     # git aliases from Oh-My-Zsh
 
@@ -40,7 +40,8 @@ autoload -Uz compinit && compinit           # init completion system (after comp
 
 zinit light Aloxaf/fzf-tab                  # fzf-driven fuzzy UI for the Tab menu
 zinit light zsh-users/zsh-autosuggestions
-zinit light zsh-users/zsh-syntax-highlighting   # MUST stay last
+zinit light zsh-users/zsh-syntax-highlighting           # before history-substring-search
+zinit light zsh-users/zsh-history-substring-search      # MUST load after highlighting
 
 # ---------------------------------------------------------------------------
 # Completion — the Tab menu (distinct from the grey history autosuggestion)
@@ -273,6 +274,22 @@ _tab_complete_or_accept() {
 }
 zle -N _tab_complete_or_accept
 bindkey '^I' _tab_complete_or_accept          # ^I = Tab
+
+# ---------------------------------------------------------------------------
+# History substring search — type a prefix, then Up/Down to walk matches.
+# Bound here, after the plugin defined its widgets (loaded in the plugins block).
+# ---------------------------------------------------------------------------
+HISTORY_SUBSTRING_SEARCH_ENSURE_UNIQUE=1     # skip duplicate matches
+bindkey "$terminfo[kcuu1]" history-substring-search-up    # Up
+bindkey "$terminfo[kcud1]" history-substring-search-down  # Down
+bindkey '^[[A' history-substring-search-up                # Up (fallback sequence)
+bindkey '^[[B' history-substring-search-down              # Down (fallback sequence)
+
+# ---------------------------------------------------------------------------
+# zoxide — smarter cd: `z <dir>` jumps to the most-used match, `zi` is fzf-pick.
+# Init after compinit so its completion registers (like starship, via eval).
+# ---------------------------------------------------------------------------
+command -v zoxide &>/dev/null && eval "$(zoxide init zsh)"
 
 # ---------------------------------------------------------------------------
 # Prompt — starship
