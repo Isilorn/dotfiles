@@ -235,16 +235,19 @@ if [[ -z "$TMUX" ]] && command -v tmux &>/dev/null; then
 fi
 
 # ---------------------------------------------------------------------------
-# Tab key — context-aware:
-#   - if there's a real completion (cd, ssh, git…) → open the fzf-tab menu
-#   - if completion yields nothing but a grey history suggestion is shown
-#     (e.g. `./install.sh --no-packages`) → accept the suggestion
-# Detected by running completion and checking whether the buffer changed.
+# Tab key — context-aware menu vs history:
+#   - "menu-first" commands (rich completers: cd, ssh, git…) OR a current word
+#     that contains "/" (path navigation) → open the fzf-tab menu
+#   - anything else, when a grey history suggestion is shown → accept it
+#     (e.g. `./install.sh --no-packages`)
+#   - otherwise → open the menu (default file completion)
 # Bound here, last, so it wins over fzf-tab's and fzf's own ^I bindings; the
 # Right arrow still accepts the grey suggestion directly too.
+# Extend _ZSH_MENU_FIRST to force the menu for more commands.
 # ---------------------------------------------------------------------------
-_tab_complete_or_accept() {
-  local _buf=$BUFFER _cur=$CURSOR
+typeset -ga _ZSH_MENU_FIRST=(cd pushd z ls ll la eza tree ssh scp sftp rsync git docker kubectl)
+
+_tab_menu() {
   if (( $+widgets[fzf-tab-complete] )); then
     zle fzf-tab-complete                     # fuzzy fzf menu
   elif (( $+widgets[fzf-completion] )); then
@@ -252,9 +255,17 @@ _tab_complete_or_accept() {
   else
     zle expand-or-complete
   fi
-  # Completion changed nothing → fall back to the grey history suggestion.
-  if [[ $BUFFER == $_buf && $CURSOR == $_cur && -n $POSTDISPLAY ]]; then
-    zle autosuggest-accept
+}
+
+_tab_complete_or_accept() {
+  local first=${${(z)LBUFFER}[1]:t}          # basename of the command word
+  local lastword=${LBUFFER##* }              # word currently being typed
+  if (( ${_ZSH_MENU_FIRST[(Ie)$first]} )) || [[ $lastword == */* ]]; then
+    _tab_menu                                # rich completer or path → menu
+  elif [[ -n $POSTDISPLAY ]]; then
+    zle autosuggest-accept                   # otherwise take the grey suggestion
+  else
+    _tab_menu                                # no suggestion → fall back to menu
   fi
 }
 zle -N _tab_complete_or_accept
