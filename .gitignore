@@ -12,3 +12,4 @@
 # Editor
 .idea/
 *.swp
+.git-deny-patterns

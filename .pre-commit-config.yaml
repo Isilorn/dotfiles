@@ -1,0 +1,11 @@
+# Garde-fou confidentialité (ADR-039, toolchain claude-py / section git-github).
+# git-deny-check = deny-list locale (.git-deny-patterns, gitignoré) + gitleaks sur le diff stagé.
+repos:
+  - repo: local
+    hooks:
+      - id: git-deny-check
+        name: deny confidential patterns + gitleaks (staged)
+        entry: git-deny-check
+        language: system
+        pass_filenames: false
+        always_run: true
