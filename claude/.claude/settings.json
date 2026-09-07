@@ -1,7 +1,9 @@
 {
   "cleanupPeriodDays": 90,
   "env": {
-    "CLAUDE_CODE_SUBAGENT_MODEL": "haiku"
+    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet",
+    "CLAUDE_CODE_MAX_WEB_SEARCHES_PER_SESSION": "400",
+    "ANTHROPIC_MODEL": "claude-opus-5[1m]"
   },
   "permissions": {
     "defaultMode": "bypassPermissions",
@@ -9,14 +11,43 @@
       "/tmp"
     ]
   },
-  "model": "sonnet[1m]",
+  "model": "claude-opus-5[1m]",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/context-alert.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/skills/project-conformity/scripts/hook-session-start.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
   "statusLine": {
     "type": "command",
     "command": "~/.claude/statusline-command.sh"
   },
+  "enabledPlugins": {
+    "skill-creator@claude-plugins-official": true
+  },
   "effortLevel": "high",
+  "autoCompactWindow": 800000,
+  "tui": "fullscreen",
+  "skipDangerousModePermissionPrompt": true,
   "theme": "dark",
   "agentPushNotifEnabled": true,
-  "autoUpdates": true,
-  "skipDangerousModePermissionPrompt": true
+  "autoUpdates": true
 }

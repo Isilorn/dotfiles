@@ -267,7 +267,7 @@ stow_packages() {
   for pkg in "${PACKAGES[@]}"; do
     if [[ -d "$DOTFILES_DIR/$pkg" ]]; then
       backup_package "$pkg"
-      run stow --dir="$DOTFILES_DIR" --target="$HOME" --restow "$pkg"
+      run stow --dir="$DOTFILES_DIR" --target="$HOME" --no-folding --restow "$pkg"
       success "$pkg stowed"
     else
       warn "$pkg directory not found, skipping"

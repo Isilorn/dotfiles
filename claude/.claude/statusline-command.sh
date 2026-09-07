@@ -4,18 +4,24 @@ BLUE='\033[94m'
 RED='\033[31m'
 YELLOW='\033[33m'
 GREEN='\033[32m'
+BOLDRED='\033[1;91m'
+INVRED='\033[1;97;41m'
 DIM='\033[2m'
 RESET='\033[0m'
 SEP=" │ "
 
+# progress_bar <percent> <width> [couleur]
 progress_bar() {
   local percent=$1
   local width=${2:-15}
+  local col=${3:-$GREEN}
   [[ -z "$percent" || "$percent" == "null" ]] && return
-  local filled=$((percent * width / 100))
+  local shown=$percent
+  (( shown > 100 )) && shown=100
+  local filled=$((shown * width / 100))
   local empty=$((width - filled))
   local bar="" i
-  for ((i=0; i<filled; i++)); do bar="${bar}${GREEN}█${RESET}"; done
+  for ((i=0; i<filled; i++)); do bar="${bar}${col}█${RESET}"; done
   for ((i=0; i<empty;  i++)); do bar="${bar}${DIM}░${RESET}"; done
   printf "%b %3d%%" "$bar" "$percent"
 }
@@ -23,7 +29,9 @@ progress_bar() {
 input=$(cat)
 
 model=$(echo "$input"        | jq -r '.model.display_name // empty')
-context_used=$(echo "$input" | jq -r '.context_window.used_percentage // empty')
+session_id=$(echo "$input"   | jq -r '.session_id // empty')
+ctx_tokens=$(echo "$input"   | jq -r '.context_window.total_input_tokens // empty')
+ctx_size=$(echo "$input"     | jq -r '.context_window.context_window_size // empty')
 five_hour=$(echo "$input"          | jq -r '.rate_limits.five_hour.used_percentage // empty')
 five_hour_reset=$(echo "$input"    | jq -r '.rate_limits.five_hour.resets_at // empty')
 seven_day=$(echo "$input"          | jq -r '.rate_limits.seven_day.used_percentage // empty')
@@ -90,6 +98,49 @@ weekly_reset_label() {
   printf "%s. %s" "$day" "$ampm"
 }
 
+# ── Contexte : calibré sur la fenêtre d'AUTO-COMPACTAGE ─────────────────
+# 🔑 `context_window.used_percentage` du payload est calculé sur la fenêtre du
+# modèle (1 000 000). Or l'auto-compactage se déclenche sur `autoCompactWindow`
+# (800 000 ici), et empiriquement vers 96 % de celle-ci (~770k). Afficher le
+# pourcentage du modèle donne « 77 % » à l'instant précis où ça compacte.
+# On recalibre donc sur la vraie borne : 100 % = le compactage est imminent.
+ctx_str=""; ctx_alert=""
+if [[ -n "$ctx_tokens" && "$ctx_tokens" != "null" ]]; then
+  window=$(jq -r '.autoCompactWindow // empty' ~/.claude/settings.json 2>/dev/null)
+  [[ -z "$window" || "$window" == "null" ]] && window="$ctx_size"
+  [[ -z "$window" || "$window" == "null" || "$window" -le 0 ]] && window=1000000
+  # borne réelle observée du déclenchement automatique
+  trigger=$(( window * 96 / 100 ))
+  pct=$(( ctx_tokens * 100 / trigger ))
+
+  if   (( pct >= 90 )); then col="$BOLDRED"
+  elif (( pct >= 80 )); then col="$RED"
+  elif (( pct >= 60 )); then col="$YELLOW"
+  else                       col="$GREEN"
+  fi
+
+  ctx_str="Ctx $(progress_bar "$pct" 15 "$col") ${DIM}$((ctx_tokens/1000))k/$((trigger/1000))k${RESET}"
+
+  if   (( pct >= 90 )); then ctx_alert="${INVRED} 🚨 COMPACTAGE IMMINENT — ROUTINE MAINTENANT ${RESET}"
+  elif (( pct >= 80 )); then ctx_alert="${BOLDRED}🚨 PRÉ-COMPACT${RESET}"
+  elif (( pct >= 70 )); then ctx_alert="${YELLOW}⚠ préparer la routine${RESET}"
+  fi
+
+  # Cloche du terminal, une seule fois par franchissement de seuil.
+  if [[ -n "$session_id" ]]; then
+    state="${TMPDIR:-/tmp}/claude-ctx-alert-${session_id}"
+    last=$(cat "$state" 2>/dev/null || echo 0)
+    reached=0
+    for s in 70 80 90; do (( pct >= s )) && reached=$s; done
+    if (( reached > last )); then
+      printf '\a' >&2
+      echo "$reached" > "$state"
+    elif (( reached < last )); then
+      echo "$reached" > "$state"   # après compactage : on réarme
+    fi
+  fi
+fi
+
 # ── Line 2 ──────────────────────────────────────────────
 cost_str=""
 if [[ -n "$cost" && "$cost" != "null" ]]; then
@@ -97,7 +148,7 @@ if [[ -n "$cost" && "$cost" != "null" ]]; then
 fi
 
 parts2=()
-[[ -n "$context_used" ]] && parts2+=("Ctx $(progress_bar "$context_used" 15)")
+[[ -n "$ctx_str" ]] && parts2+=("$ctx_str")
 if [[ -n "$five_hour" ]]; then
   five_r=$(session_reset_label "$five_hour_reset")
   five_bar=$(progress_bar "$five_hour" 15)
@@ -116,5 +167,7 @@ for part in "${parts2[@]}"; do
   [[ -n "$line2" ]] && line2="${line2}${SEP}"
   line2="${line2}${part}"
 done
+
+[[ -n "$ctx_alert" ]] && line2="${line2}${SEP}${ctx_alert}"
 
 printf "%b\n%b\n" "$line1" "$line2"
