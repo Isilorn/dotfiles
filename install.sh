@@ -15,6 +15,7 @@ DRY_RUN=false
 ROLLBACK=false
 NO_PACKAGES=false
 NO_STOW=false
+VERIFY=false
 
 for arg in "$@"; do
   case "$arg" in
@@ -22,13 +23,15 @@ for arg in "$@"; do
     --rollback)    ROLLBACK=true ;;
     --no-packages) NO_PACKAGES=true ;;
     --no-stow)     NO_STOW=true ;;
+    --verify)      VERIFY=true ;;
     --help|-h)
-      echo "Usage: $0 [--dry-run] [--rollback] [--no-packages] [--no-stow]"
+      echo "Usage: $0 [--dry-run] [--rollback] [--no-packages] [--no-stow] [--verify]"
       echo ""
       echo "  --dry-run      Show what would be done, without modifying anything"
       echo "  --rollback     Remove symlinks, restore backed-up files, revert shell"
       echo "  --no-packages  Skip package installation"
       echo "  --no-stow      Skip symlinking dotfiles"
+      echo "  --verify       Check the deployment for drift, change nothing"
       exit 0 ;;
   esac
 done
@@ -341,6 +344,102 @@ install_zinit_plugins() {
 }
 
 # ---------------------------------------------------------------------------
+# Verify — is the deployment still intact? (read-only)
+#
+# Catches the two drifts that went unnoticed for months:
+#   1. a stowed file that became a real file — edited in place, cut off from git
+#   2. a deployment lagging behind the published source
+# Plus the stow folding hazard: a directory that became a symlink, so anything
+# written into it later lands inside the repo.
+#
+# Changes nothing (the git fetch only updates remote-tracking refs).
+# Exits non-zero when something needs attention, so it can be scripted.
+# ---------------------------------------------------------------------------
+verify_deployment() {
+  info "Verifying deployment — $DOTFILES_DIR"
+  local issues=0 checked=0 pkg src rel target real d
+
+  for pkg in "${PACKAGES[@]}"; do
+    [[ -d "$DOTFILES_DIR/$pkg" ]] || continue
+
+    # Directories that stow may have folded into a symlink
+    while IFS= read -r -d '' d; do
+      rel="${d#"$DOTFILES_DIR/$pkg"/}"
+      target="$HOME/$rel"
+      if [[ -L "$target" ]]; then
+        warn "~/$rel is a DIRECTORY symlink (stow folding) — files written there land in the repo"
+        (( issues++ )) || true
+      fi
+    done < <(find "$DOTFILES_DIR/$pkg" -mindepth 1 -type d -print0)
+
+    # Every packaged file must be a symlink back to this repo
+    while IFS= read -r -d '' src; do
+      rel="${src#"$DOTFILES_DIR/$pkg"/}"
+      target="$HOME/$rel"
+      (( checked++ )) || true
+
+      if [[ -L "$target" ]]; then
+        real="$(realpath "$target" 2>/dev/null || echo '')"
+        [[ "$real" == "$src" ]] && continue
+        if [[ "$real" == "$DOTFILES_DIR"/* ]]; then
+          warn "~/$rel links into the repo, but not to $pkg/$rel"
+        else
+          warn "~/$rel is a symlink pointing outside the repo → $real"
+        fi
+        (( issues++ )) || true
+      elif [[ -e "$target" ]]; then
+        if diff -q "$target" "$src" &>/dev/null; then
+          warn "~/$rel is a REAL FILE, not a link (same content — re-stow to fix)"
+        else
+          printf '\033[1;31m  ✘ ~/%s is a REAL FILE and has DIVERGED from the repo\033[0m\n' "$rel"
+          printf '\033[2m      save it before re-stowing:  diff %s %s\033[0m\n' "$src" "$target"
+        fi
+        (( issues++ )) || true
+      else
+        warn "~/$rel is not deployed (missing)"
+        (( issues++ )) || true
+      fi
+    done < <(find "$DOTFILES_DIR/$pkg" -type f -print0)
+  done
+
+  # Is this deployment up to date with the published source?
+  if git -C "$DOTFILES_DIR" rev-parse --git-dir &>/dev/null; then
+    local upstream behind ahead dirty
+    git -C "$DOTFILES_DIR" fetch --quiet 2>/dev/null \
+      || warn "could not fetch (offline?) — freshness below may be stale"
+    upstream="$(git -C "$DOTFILES_DIR" rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || echo '')"
+    if [[ -n "$upstream" ]]; then
+      behind="$(git -C "$DOTFILES_DIR" rev-list --count "HEAD..$upstream" 2>/dev/null || echo 0)"
+      ahead="$(git -C "$DOTFILES_DIR" rev-list --count "$upstream..HEAD" 2>/dev/null || echo 0)"
+      if (( behind > 0 )); then
+        warn "deployment is $behind commit(s) behind $upstream — run: git -C \"$DOTFILES_DIR\" pull && \"$DOTFILES_DIR/install.sh\""
+        (( issues++ )) || true
+      fi
+      if (( ahead > 0 )); then
+        warn "$ahead commit(s) here are not pushed — if this clone is the deployment, that work only exists here"
+        (( issues++ )) || true
+      fi
+      (( behind == 0 && ahead == 0 )) && success "in sync with $upstream" || true
+    fi
+    dirty="$(git -C "$DOTFILES_DIR" status --porcelain 2>/dev/null || true)"
+    if [[ -n "$dirty" ]]; then
+      warn "uncommitted changes in this clone — if it is the deployment, port them to the source before they are lost:"
+      printf '%s\n' "$dirty" | sed 's/^/      /'
+      (( issues++ )) || true
+    fi
+  fi
+
+  echo ""
+  if (( issues == 0 )); then
+    success "$checked file(s) checked — deployment intact."
+  else
+    printf '\033[1;31m  ✘ %s issue(s) across %s file(s) checked.\033[0m\n' "$issues" "$checked"
+    printf '\033[2m    Save anything that diverged, then re-run: %s\033[0m\n' "$DOTFILES_DIR/install.sh"
+  fi
+  return $(( issues > 0 ))
+}
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 main() {
@@ -351,6 +450,12 @@ main() {
     printf '\033[1m  Dotfiles installer — %s/%s\033[0m\n' "$OS" "$(uname -m)"
   fi
   echo ""
+
+  if $VERIFY; then
+    local rc=0
+    verify_deployment || rc=$?   # || keeps set -e from cutting us off
+    exit $rc
+  fi
 
   if $ROLLBACK; then
     rollback

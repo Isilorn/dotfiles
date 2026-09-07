@@ -76,8 +76,23 @@ If new packages were added to `install.sh` since the last install, run without `
 ./install.sh --dry-run      # preview everything without modifying anything
 ./install.sh --rollback     # restore original files and remove symlinks
 ./install.sh --no-packages  # stow only, skip package installation
+./install.sh --verify       # check the deployment for drift, change nothing
 ./install.sh --no-stow      # packages only, skip symlinking
 ```
+
+### Checking for drift
+
+The repo is the source of truth; the clone you deploy from is only a copy. Editing a
+deployed file in place silently replaces its stow symlink with a real file, which cuts it
+off from version control until the next `stow` overwrites it.
+
+`./install.sh --verify` reports, without changing anything:
+
+- packaged files that are no longer symlinks back into the repo (or point elsewhere);
+- directories stow folded into a symlink, where anything written later lands in the repo;
+- how far this clone is behind its upstream, and any uncommitted changes in it.
+
+It exits non-zero when something needs attention, so it can be scripted or scheduled.
 
 ### Automatic backup
 
