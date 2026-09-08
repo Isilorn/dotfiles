@@ -1,4 +1,31 @@
 #!/bin/bash
+# ─────────────────────────────────────────────────────────────────────────────
+# statusline-command.sh — barre d'état Claude Code (2 lignes).
+#
+# 🔑 POURQUOI LA JAUGE DE CONTEXTE EST RECALIBRÉE (× 0,96)
+# Le payload expose `context_window.used_percentage`, calculé sur la fenêtre du
+# MODÈLE (1 000 000). Or l'auto-compactage se déclenche sur `autoCompactWindow`
+# de ~/.claude/settings.json (800 000 ici), et empiriquement vers 96 % de
+# celle-ci. Mesuré le 11/08/2026 sur trois déclenchements `auto` :
+#     preTokens = 767 918 · 774 144 · 768 272
+# Soit « 77 % » affichés à l'instant précis où ça compacte. Une barre qui montre
+# les trois quarts alors qu'il ne reste rien est pire que pas de barre. On
+# recalibre donc sur autoCompactWindow × 0,96 : 100 % = compactage imminent.
+#
+# ⚠️ Ce script LIT autoCompactWindow dans settings.json. Séparer les deux
+#    (changer le réglage sans le script, ou l'inverse) casse la jauge.
+#
+# SEUILS — ils ne sont pas ronds par hasard :
+#   70 %  préparer ·  80 %  lancer la routine (il reste ~150k tokens, largement
+#   de quoi la mener) ·  90 %  dernier moment.
+#
+# ⚠️ La cloche du terminal, et pas `notify-send` : pas de DISPLAY sur cette
+#    machine. Barre d'état + cloche sont les deux seuls canaux fiables. Et le
+#    hook `PreCompact` ne prévient PAS — il se déclenche *pendant*, trop tard.
+#
+# L'autre moitié (prévenir l'AGENT, qui ne voit pas son propre remplissage) est
+# le hook UserPromptSubmit ~/.claude/hooks/context-alert.sh, du même paquet.
+# ─────────────────────────────────────────────────────────────────────────────
 
 BLUE='\033[94m'
 RED='\033[31m'
