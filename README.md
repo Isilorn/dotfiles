@@ -124,6 +124,52 @@ Created automatically by `install.sh` as an empty scaffold. Contains everything 
 
 `~/.gitconfig` includes this file at the end via `[include]`, allowing it to override any global setting.
 
+## Rebuilding a machine from scratch
+
+Three separate mechanisms produce a working Claude Code setup, and only one of them reaches both
+machines — this repo. The other two are referenced here rather than duplicated.
+
+| Mechanism | Installs | Runs on |
+|---|---|---|
+| provisioning tooling | Claude Code itself, the managed blocks of `~/.claude/CLAUDE.md`, the toolbox skills | Linux box only |
+| **this repo** | `settings.json`, keybindings, the status line, the context hook, the four agents | both |
+| skill deployment | the generic skills, from a local repo with no remote | Linux box only |
+
+### On the Linux box
+
+`./install.sh` covers this repo; the other two mechanisms are driven from their own repos.
+
+### On macOS
+
+1. **Install Claude Code by hand** — the provisioning tooling does not run here.
+2. **This repo:**
+   ```bash
+   git clone <this repo> ~/.dotfiles && cd ~/.dotfiles
+   ./install.sh
+   ./install.sh --verify
+   ```
+   Check that `~/.claude/` is still a **real directory** with per-file symlinks. `install.sh`
+   passes `--no-folding` to stow precisely so it stays that way: stow replaces no existing
+   directory, but it creates a *symlink* for any directory missing on the target side — and
+   `~/.claude/` also holds `projects/`, `plugins/` and `skills/`, which must never be versioned.
+3. **The generic skills** — copied across from the Linux box for now. This step is deliberately
+   manual and deliberately temporary: their source repo has no remote.
+4. **The `SessionStart` hook** needs nothing: it is guarded, and is a silent no-op when the
+   script it points at is absent (see above).
+
+### What must NOT be carried over
+
+The toolbox skills and the toolbox block of `~/.claude/CLAUDE.md` describe a specific Linux
+devbox: a shared Python environment under `/opt`, browser engines at a fixed path, `apt`, and a
+doctor command that exists only there. **Those paths are the instruction, not an illustration.**
+An agent reading them on macOS would run a command that does not exist and conclude the tooling
+is broken, when it is merely *different* — and a skill that lies is worse than a skill that is
+missing: absence makes you probe, a lie makes you act. If macOS ever becomes a real workstation,
+the answer is a macOS variant owned by the repo that builds the devbox, not a copy of this one.
+
+**Never copy the shared secrets file** onto another machine. The global instructions forbid it,
+and needing a secret on a second machine is a separate decision, taken explicitly.
+
 ### Hooks referencing files this repo does not deploy
 
 `settings.json` registers two hooks. `UserPromptSubmit` points at
