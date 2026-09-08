@@ -157,6 +157,22 @@ machines — this repo. The other two are referenced here rather than duplicated
 4. **The `SessionStart` hook** needs nothing: it is guarded, and is a silent no-op when the
    script it points at is absent (see above).
 
+### Check the shell environment before trusting a scan
+
+Claude Code snapshots the interactive shell, so an agent's commands can silently run through
+wrappers — some from this repo's own aliases, some from the tool. One line lists them:
+
+```bash
+for c in grep find jq cat sed awk ls; do type -a $c | head -1; done
+```
+
+Only one class actually matters. A **filtering** wrapper (e.g. a `grep` that skips
+gitignored files) makes a scan return a *wrong* answer in silence — so any claim that something
+is **absent** must be re-run with the real binary (`/usr/bin/grep`) before it is reported. A
+*decorating* wrapper corrupts a redirection but reveals itself at the next parse; a *faithful*
+drop-in replacement costs nothing. Scripts are immune either way: aliases and shell functions do
+not survive a fork, so `install.sh` and the hooks always get the real binaries.
+
 ### What must NOT be carried over
 
 The toolbox skills and the toolbox block of `~/.claude/CLAUDE.md` describe a specific Linux

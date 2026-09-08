@@ -145,10 +145,9 @@ if command -v ncdu &>/dev/null; then
 fi
 alias duh='du -sh -- * | sort -h'
 
-# JSON — jq with colors
-if command -v jq &>/dev/null; then
-  alias jq='jq -C'
-fi
+# JSON — jq already colorizes on a terminal by default, so no alias is needed.
+# Do NOT add `-C`: it forces color even when the output is piped or redirected,
+# which silently writes ANSI escapes into files and breaks the next parse.
 
 # Network
 if command -v ss &>/dev/null; then
