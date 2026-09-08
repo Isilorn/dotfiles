@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/skills/project-conformity/scripts/hook-session-start.sh",
+            "command": "sh -c '[ -x ~/.claude/skills/project-conformity/scripts/hook-session-start.sh ] && exec ~/.claude/skills/project-conformity/scripts/hook-session-start.sh || true'",
             "timeout": 10
           }
         ]

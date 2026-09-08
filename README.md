@@ -124,6 +124,23 @@ Created automatically by `install.sh` as an empty scaffold. Contains everything 
 
 `~/.gitconfig` includes this file at the end via `[include]`, allowing it to override any global setting.
 
+### Hooks referencing files this repo does not deploy
+
+`settings.json` registers two hooks. `UserPromptSubmit` points at
+`claude/.claude/hooks/context-alert.sh`, which this repo deploys, so it is always there.
+
+`SessionStart` is different: it points at a script under `~/.claude/skills/`, which is placed
+by a separate tool that only runs on the Linux box. On a freshly stowed machine that file does
+not exist, and an unguarded command fails with exit 127 at every session start. The entry is
+therefore wrapped:
+
+```
+sh -c '[ -x <path> ] && exec <path> || true'
+```
+
+Present, it runs and its exit code propagates; absent, the hook is silently a no-op. JSON has
+no comments, so this note is the only place that explains the wrapper — do not "clean it up".
+
 ### `~/.claude/settings.local.json`
 
 Machine-specific Claude Code overrides — never committed. The shared `settings.json` enables `bypassPermissions` globally; use this file to layer additional `additionalDirectories`, env vars or hooks that only apply to one machine:
