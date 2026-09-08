@@ -166,6 +166,13 @@ wrappers — some from this repo's own aliases, some from the tool. One line lis
 for c in grep find jq cat sed awk ls; do type -a $c | head -1; done
 ```
 
+Seeing a wrapper you thought you had removed does not mean the fix failed. Two things keep it
+alive independently: the repo change is not deployed until `git pull` + `install.sh` run in the
+deployment clone (`--verify` reports how far behind it is), and Claude Code snapshots the
+interactive shell **at session start** — already-open sessions keep the old wrappers until they
+are closed, however current the files on disk are. Fixing the source only ever protects the
+*next* shell.
+
 Only one class actually matters. A **filtering** wrapper (e.g. a `grep` that skips
 gitignored files) makes a scan return a *wrong* answer in silence — so any claim that something
 is **absent** must be re-run with the real binary (`/usr/bin/grep`) before it is reported. A
