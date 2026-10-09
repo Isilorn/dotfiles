@@ -61,7 +61,7 @@ the deployment clone (see README, « Guarding deployed files against agents »).
 - **zinit** — Homebrew on macOS, standalone bootstrap on Linux.
 - **starship** — Homebrew on macOS, official install script on Linux (not in apt).
 - **tmux prefix** — changed to `Ctrl-a`; splits use `|` and `-`.
-- **tmux/WezTerm titles** — zsh `precmd`/`preexec` hooks emit OSC 0 + `\ek` (tmux rename).
+- **tmux/WezTerm titles** — zsh `precmd`/`preexec` emit OSC 0 only (the pane title); tmux derives the window name from it (`automatic-rename-format "#{pane_title}"`), so a long-running program's own title — a Claude session name — reaches the WezTerm tab.
 - **tmux auto-attach** — `.zshrc` asks at login if a session exists (y/n prompt).
 - **Claude Code uses `bypassPermissions`** — `settings.json` opts in to auto-approval globally; per-machine extras (e.g. extra `additionalDirectories`) go in `~/.claude/settings.local.json`.
 

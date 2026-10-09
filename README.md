@@ -219,8 +219,9 @@ change to the hook. To disable the guard for one session, start Claude Code with
 
 ### Hooks referencing files this repo does not deploy
 
-`settings.json` registers two hooks. `UserPromptSubmit` points at
-`claude/.claude/hooks/context-alert.sh`, which this repo deploys, so it is always there.
+`settings.json` registers three hooks. `UserPromptSubmit` and `PreToolUse` point at
+`claude/.claude/hooks/context-alert.sh` and `stow-guard.sh`, which this repo deploys, so they are
+always there.
 
 `SessionStart` is different: it points at a script under `~/.claude/skills/`, which is placed
 by a separate tool that only runs on the Linux box. On a freshly stowed machine that file does
