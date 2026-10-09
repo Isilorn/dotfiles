@@ -63,6 +63,11 @@ five_hour=$(echo "$input"          | jq -r '.rate_limits.five_hour.used_percenta
 five_hour_reset=$(echo "$input"    | jq -r '.rate_limits.five_hour.resets_at // empty')
 seven_day=$(echo "$input"          | jq -r '.rate_limits.seven_day.used_percentage // empty')
 seven_day_reset=$(echo "$input"    | jq -r '.rate_limits.seven_day.resets_at // empty')
+# Persistance des limites pour les boucles autonomes (BD 11/09) : n'écrit que si un dossier watchdog existe pour la session
+if [ -n "$session_id" ] && [ -d "$HOME/.claude/watchdog/${session_id:0:8}" ]; then
+  printf '{"five_hour":%s,"seven_day":%s,"seven_day_reset":"%s","ts":"%s"}\n' "${five_hour:-null}" "${seven_day:-null}" "$seven_day_reset" "$(date -Is)" \
+    > "$HOME/.claude/watchdog/${session_id:0:8}/limits.json" 2>/dev/null || true
+fi
 duration=$(echo "$input"     | jq -r '.cost.total_api_duration_ms // empty')
 cost=$(echo "$input"         | jq -r '.cost.total_cost_usd // empty')
 cwd=$(echo "$input"          | jq -r '.cwd // .workspace.current_dir // empty')
