@@ -44,7 +44,7 @@
     "skill-creator@claude-plugins-official": true
   },
   "effortLevel": "high",
-  "autoCompactWindow": 800000,
+  "autoCompactWindow": 900000,
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "theme": "dark",
