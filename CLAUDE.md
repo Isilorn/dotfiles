@@ -20,9 +20,13 @@ dotfiles/
 ├── zsh/      → ~/.zshrc
 ├── tmux/     → ~/.tmux.conf
 ├── starship/ → ~/.config/starship.toml
-├── claude/   → ~/.claude/{settings.json,keybindings.json,statusline-command.sh,hooks/,agents/}
-└── wezterm/  → ~/.config/wezterm/wezterm.lua  (macOS only)
+├── claude/   → ~/.claude/{settings.json,keybindings.json,statusline-command.sh,hooks/,agents/,rules/}
+├── wezterm/  → ~/.config/wezterm/wezterm.lua  (macOS only)
+└── tests/    — benches, not a stow package (stow-guard-bench.sh)
 ```
+
+Edit the **source** clone only: `hooks/stow-guard.sh` refuses agent edits to deployed paths and to
+the deployment clone (see README, « Guarding deployed files against agents »).
 
 ## Deploying
 

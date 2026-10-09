@@ -193,6 +193,30 @@ the answer is a macOS variant owned by the repo that builds the devbox, not a co
 **Never copy the shared secrets file** onto another machine. The global instructions forbid it,
 and needing a secret on a second machine is a separate decision, taken explicitly.
 
+### Guarding deployed files against agents
+
+Agents working in *other* projects can edit `~/.claude/settings.json` too — and an in-place edit
+breaks the stow link: GNU `sed -i` without `--follow-symlinks` replaces a symlink with a regular
+file. That is how the file drifted out of version control in September 2026, unnoticed for 12
+days. Two pieces, deployed by the `claude` package, keep agents off deployed files:
+
+- **`rules/claude-config.md`** → `~/.claude/rules/`, loaded by Claude Code in every session of
+  every project. It says which files are owned here and what to do instead: describe the change
+  and hand it to the dotfiles session or to the user, who approves and redeploys.
+- **`hooks/stow-guard.sh`**, a `PreToolUse` hook. It refuses `Edit`/`Write` on a deployed path
+  (and on the deployment clone, when a separate source clone exists), and Bash commands running
+  an *in-place* editor (`sed -i`, `perl -i`) on one. Other writers (`cp`, `mv`, `>`) are not
+  matched, by choice: it only refuses what it can identify without false positives.
+
+The rule explains, the hook enforces: prose alone ends up ignored, and a bare refusal leaves the
+agent guessing. Cost: ~15 ms per tool call.
+
+The hook **fails open** — so does Claude Code with a missing or broken hook — so a guard that
+silently stopped refusing would look exactly like a working one. `tests/stow-guard-bench.sh`
+replays 27 cases in a throwaway `HOME` and is what proves it still refuses; run it after any
+change to the hook. To disable the guard for one session, start Claude Code with
+`DOTFILES_GUARD=off claude` (a variable set inside an agent's command does not reach the hook).
+
 ### Hooks referencing files this repo does not deploy
 
 `settings.json` registers two hooks. `UserPromptSubmit` points at
