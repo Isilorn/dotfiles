@@ -52,6 +52,11 @@ check allow "sed WITHOUT -i reading ~/.zshrc"                 "$(bash_ "sed -n 1
 check allow "perl -Mstrict (an i that is not -i) on ~/.zshrc" "$(bash_ "perl -Mstrict -ne 'print' ~/.zshrc")"
 check allow "cat / jq on settings.json (reads)"               "$(bash_ "jq . ~/.claude/settings.json > /tmp/x; cat ~/.zshrc")"
 check allow "cp onto ~/.zshrc (not an in-place editor, by choice)" "$(bash_ "cp /tmp/x ~/.zshrc")"
+echo "== The dotfiles session's own work =="
+check allow "redeploy: git pull + install.sh in the deployment clone" "$(bash_ "cd $H/.dotfiles && git pull -q && ./install.sh --no-packages")"
+check allow "discard ported changes: git checkout in the clone"       "$(bash_ "git -C $H/.dotfiles checkout -- zsh/.zshrc")"
+check allow "memory under ~/.claude/projects (not deployed)"          "$(edit Write "$H/.claude/projects/p/memory/m.md")"
+check allow "KNOWN GAP: python rewriting a deployed file"             "$(bash_ "python3 -c \"open('$H/.zshrc','w')\"")"
 echo "== Escape hatch, fail-open, single-clone machine =="
 check allow "DOTFILES_GUARD=off at launch"                    "$(edit Edit "$H/.claude/settings.json")" DOTFILES_GUARD=off
 check allow "malformed input → fail open"                     'not json'
