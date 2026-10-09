@@ -2,22 +2,30 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # statusline-command.sh — barre d'état Claude Code (2 lignes).
 #
-# 🔑 POURQUOI LA JAUGE DE CONTEXTE EST RECALIBRÉE (× 0,96)
+# 🔑 POURQUOI LA JAUGE DE CONTEXTE EST RECALIBRÉE
 # Le payload expose `context_window.used_percentage`, calculé sur la fenêtre du
-# MODÈLE (1 000 000). Or l'auto-compactage se déclenche sur `autoCompactWindow`
-# de ~/.claude/settings.json (800 000 ici), et empiriquement vers 96 % de
-# celle-ci. Mesuré le 11/08/2026 sur trois déclenchements `auto` :
-#     preTokens = 767 918 · 774 144 · 768 272
-# Soit « 77 % » affichés à l'instant précis où ça compacte. Une barre qui montre
-# les trois quarts alors qu'il ne reste rien est pire que pas de barre. On
-# recalibre donc sur autoCompactWindow × 0,96 : 100 % = compactage imminent.
+# MODÈLE (1 000 000). Or l'auto-compactage se déclenche bien avant : à la fenêtre
+# d'auto-compactage MOINS une réserve FIXE de 33k. Le pourcentage du modèle
+# affichait « 77 % » à l'instant précis où ça compactait — une barre qui montre
+# les trois quarts alors qu'il ne reste rien est pire que pas de barre.
+# Ici, 100 % = compactage imminent.
 #
-# ⚠️ Ce script LIT autoCompactWindow dans settings.json. Séparer les deux
-#    (changer le réglage sans le script, ou l'inverse) casse la jauge.
+# Le seuil se calcule dans hooks/compact-trigger.sh, PARTAGÉ avec le hook
+# context-alert.sh : la barre et l'alerte ne peuvent pas diverger. Les mesures
+# qui fondent la formule y sont.
 #
-# SEUILS — ils ne sont pas ronds par hasard :
-#   70 %  préparer ·  80 %  lancer la routine (il reste ~150k tokens, largement
-#   de quoi la mener) ·  90 %  dernier moment.
+# Historique : jusqu'au 09/10/2026 la formule était `autoCompactWindow × 0,96`,
+# tirée de trois déclenchements à 800k (preTokens 767 918 · 774 144 · 768 272).
+# Elle ne tombait juste qu'à 800k, par coïncidence : à 100k, elle plaçait le
+# seuil 29k trop tard et la jauge ne prévenait jamais.
+#
+# ⚠️ La fenêtre se résout dans settings.json, y compris dans
+#    modelSettings.<modèle> — là où `/autocompact` écrit. Le flag
+#    `--autocompact` passé au lancement est invisible d'ici.
+#
+# SEUILS — 70 % préparer · 80 % lancer la routine · 90 % dernier moment.
+#   À 900k (seuil 867k), le 80 % tombe à ~694k : il reste ~170k, largement de
+#   quoi mener une routine (médiane mesurée 20k, pire cas 59k).
 #
 # ⚠️ La cloche du terminal, et pas `notify-send` : pas de DISPLAY sur cette
 #    machine. Barre d'état + cloche sont les deux seuls canaux fiables. Et le
@@ -56,6 +64,7 @@ progress_bar() {
 input=$(cat)
 
 model=$(echo "$input"        | jq -r '.model.display_name // empty')
+model_id=$(echo "$input"     | jq -r '.model.id // empty')
 session_id=$(echo "$input"   | jq -r '.session_id // empty')
 ctx_tokens=$(echo "$input"   | jq -r '.context_window.total_input_tokens // empty')
 ctx_size=$(echo "$input"     | jq -r '.context_window.context_window_size // empty')
@@ -130,19 +139,14 @@ weekly_reset_label() {
   printf "%s. %s" "$day" "$ampm"
 }
 
-# ── Contexte : calibré sur la fenêtre d'AUTO-COMPACTAGE ─────────────────
-# 🔑 `context_window.used_percentage` du payload est calculé sur la fenêtre du
-# modèle (1 000 000). Or l'auto-compactage se déclenche sur `autoCompactWindow`
-# (800 000 ici), et empiriquement vers 96 % de celle-ci (~770k). Afficher le
-# pourcentage du modèle donne « 77 % » à l'instant précis où ça compacte.
-# On recalibre donc sur la vraie borne : 100 % = le compactage est imminent.
+# ── Contexte : calibré sur le SEUIL D'AUTO-COMPACTAGE ───────────────────
+# 100 % = le compactage est imminent. Calcul partagé avec le hook ; si le
+# fichier partagé manque (déploiement incomplet), repli sur fenêtre − 33k.
+. "${BASH_SOURCE[0]%/*}/hooks/compact-trigger.sh" 2>/dev/null \
+  || compact_trigger() { echo $(( ${2:-1000000} - 33000 )); }
 ctx_str=""; ctx_alert=""
 if [[ -n "$ctx_tokens" && "$ctx_tokens" != "null" ]]; then
-  window=$(jq -r '.autoCompactWindow // empty' ~/.claude/settings.json 2>/dev/null)
-  [[ -z "$window" || "$window" == "null" ]] && window="$ctx_size"
-  [[ -z "$window" || "$window" == "null" || "$window" -le 0 ]] && window=1000000
-  # borne réelle observée du déclenchement automatique
-  trigger=$(( window * 96 / 100 ))
+  trigger=$(compact_trigger "$model_id" "$ctx_size")
   pct=$(( ctx_tokens * 100 / trigger ))
 
   if   (( pct >= 90 )); then col="$BOLDRED"

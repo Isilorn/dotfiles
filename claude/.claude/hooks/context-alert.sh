@@ -10,8 +10,9 @@
 # depuis le transcript. La dernière `usage` d'un message assistant DONNE la
 # taille réelle du contexte à ce moment-là (input + cache_read + cache_creation).
 #
-# ⚠️ La référence n'est PAS la fenêtre du modèle (1 M) mais `autoCompactWindow`
-#    (800 k), et le déclenchement tombe vers 96 % de celle-ci (~770 k).
+# ⚠️ La référence n'est PAS la fenêtre du modèle (1 M) mais le seuil réel
+#    d'auto-compactage : fenêtre d'auto-compactage − 33k (réserve fixe). Le
+#    calcul vit dans compact-trigger.sh, partagé avec la barre d'état.
 #
 # Silencieux sous le seuil. Sur stdout, ce qu'écrit un hook UserPromptSubmit est
 # injecté comme contexte du prompt.
@@ -37,9 +38,14 @@ used=$(tail -n 300 "$T" 2>/dev/null \
     2>/dev/null | tail -1)
 [ -n "${used:-}" ] && [ "$used" -ge 0 ] 2>/dev/null || exit 0
 
-window=$(jq -r '.autoCompactWindow // empty' "$HOME/.claude/settings.json" 2>/dev/null)
-[ -n "$window" ] && [ "$window" -gt 0 ] 2>/dev/null || window=1000000
-trigger=$(( window * 96 / 100 ))
+# Même seuil que la barre d'état. Le modèle se lit dans le transcript, ce qui
+# permet de résoudre modelSettings.<modèle> ; la taille de sa fenêtre n'y
+# figure pas, d'où 1M par défaut — juste pour les modèles de session actuels.
+. "${BASH_SOURCE[0]%/*}/compact-trigger.sh" 2>/dev/null \
+  || compact_trigger() { echo $(( ${2:-1000000} - 33000 )); }
+model=$(tail -n 300 "$T" 2>/dev/null \
+  | jq -r 'select(.type=="assistant") | .message.model // empty' 2>/dev/null | tail -1)
+trigger=$(compact_trigger "${model:-}" "")
 pct=$(( used * 100 / trigger ))
 
 reached=0
