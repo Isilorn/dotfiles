@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SC2088: every quoted "~/…" in this script is a message shown to the user,
+# where the literal tilde is intended — no path is built from them.
+# shellcheck disable=SC2088
 set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -202,7 +205,7 @@ install_packages() {
   if [[ "$OS" == Darwin ]]; then
     has brew || die "Homebrew not found — install it first: https://brew.sh"
     run brew install --quiet \
-      git git-delta starship stow zsh zinit fzf fd eza bat zoxide
+      git git-delta starship stow zsh zinit fzf fd eza bat zoxide jq
     run brew install --quiet --cask wezterm
     success "Homebrew packages installed"
 
@@ -211,7 +214,7 @@ install_packages() {
     srun apt-get update -qq
     # starship is not in apt repos — installed separately below
     srun apt-get install -y --no-install-recommends \
-      git git-delta stow zsh fzf fd-find eza bat curl zoxide
+      git git-delta stow zsh fzf fd-find eza bat curl zoxide jq
     success "apt packages installed"
 
     mkdir -p "$HOME/.local/bin"
