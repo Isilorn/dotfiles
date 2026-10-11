@@ -8,7 +8,9 @@
 # This bench is what proves it still refuses.
 set -u
 REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
+# Physical path: on macOS mktemp gives /var/folders/…, a symlink to /private/var/…;
+# the hook resolves its own location, so a symlinked HOME would fail the comparison.
+T=$(cd "$(mktemp -d)" && pwd -P); trap 'rm -rf "$T"' EXIT
 H=$T/home; mkdir -p "$H/.claude" "$H/Sas/proj" "$H/work/proj"
 git clone -q "$REPO" "$H/Github/dotfiles"
 git clone -q "$REPO" "$H/.dotfiles"
