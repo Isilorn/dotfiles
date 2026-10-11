@@ -219,14 +219,22 @@ change to the hook. To disable the guard for one session, start Claude Code with
 
 ### Hooks referencing files this repo does not deploy
 
-`settings.json` registers three hooks. `UserPromptSubmit` and `PreToolUse` point at
+`settings.json` registers four hook entries. `UserPromptSubmit` and `PreToolUse` point at
 `claude/.claude/hooks/context-alert.sh` and `stow-guard.sh`, which this repo deploys, so they are
 always there.
 
-`SessionStart` is different: it points at a script under `~/.claude/skills/`, which is placed
-by a separate tool that only runs on the Linux box. On a freshly stowed machine that file does
-not exist, and an unguarded command fails with exit 127 at every session start. The entry is
-therefore wrapped:
+`SessionStart` is different. Its two entries point at scripts under `~/.claude/skills/`, which
+are placed by a separate tool (`skill-deploy`, from the skills repo):
+
+- no matcher → `project-conformity/scripts/hook-session-start.sh`, at every session start;
+- `"matcher": "compact"` → `session-routines/scripts/hook-post-compact`, only after a
+  compaction. It archives the transcript segment synchronously, then prints a block the next
+  turn picks up. Its timeout is **120 s**, not the usual 10: common cases take 1–2 s, but the
+  worst measured case (a 228 MB transcript never archived) took 59.7 s. Killed by the timeout,
+  the session simply continues without the block.
+
+On a freshly stowed machine those files do not exist, and an unguarded command fails with
+exit 127 at every session start. Each entry is therefore wrapped:
 
 ```
 sh -c '[ -x <path> ] && exec <path> || true'
