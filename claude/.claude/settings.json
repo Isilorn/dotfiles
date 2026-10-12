@@ -13,17 +13,6 @@
   },
   "model": "opus[1m]",
   "hooks": {
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/context-alert.sh",
-            "timeout": 10
-          }
-        ]
-      }
-    ],
     "SessionStart": [
       {
         "hooks": [
@@ -40,7 +29,7 @@
           {
             "type": "command",
             "command": "sh -c '[ -x ~/.claude/skills/session-routines/scripts/hook-post-compact ] && exec ~/.claude/skills/session-routines/scripts/hook-post-compact || true'",
-            "timeout": 120
+            "timeout": 10
           }
         ]
       }

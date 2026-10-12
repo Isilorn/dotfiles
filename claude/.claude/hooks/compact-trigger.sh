@@ -1,8 +1,7 @@
 # shellcheck shell=bash
 # ─────────────────────────────────────────────────────────────────────────────
 # compact-trigger.sh — the ONE place that computes where auto-compaction fires.
-# Sourced (not executed) by statusline-command.sh and hooks/context-alert.sh, so
-# the gauge and the alert can never disagree on the threshold.
+# Sourced (not executed) by statusline-command.sh.
 #
 #   compact_trigger <model_id> <context_window_size>   → prints a token count
 #

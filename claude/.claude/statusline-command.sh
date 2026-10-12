@@ -10,9 +10,8 @@
 # les trois quarts alors qu'il ne reste rien est pire que pas de barre.
 # Ici, 100 % = compactage imminent.
 #
-# Le seuil se calcule dans hooks/compact-trigger.sh, PARTAGÉ avec le hook
-# context-alert.sh : la barre et l'alerte ne peuvent pas diverger. Les mesures
-# qui fondent la formule y sont.
+# Le seuil se calcule dans hooks/compact-trigger.sh, avec les mesures qui
+# fondent la formule.
 #
 # Historique : jusqu'au 09/10/2026 la formule était `autoCompactWindow × 0,96`,
 # tirée de trois déclenchements à 800k (preTokens 767 918 · 774 144 · 768 272).
@@ -31,8 +30,9 @@
 #    machine. Barre d'état + cloche sont les deux seuls canaux fiables. Et le
 #    hook `PreCompact` ne prévient PAS — il se déclenche *pendant*, trop tard.
 #
-# L'autre moitié (prévenir l'AGENT, qui ne voit pas son propre remplissage) est
-# le hook UserPromptSubmit ~/.claude/hooks/context-alert.sh, du même paquet.
+# L'AGENT, lui, ne voit pas son propre remplissage et n'est pas prévenu : la
+# routine se joue APRÈS le compactage, sur le bloc du hook SessionStart
+# « compact » (session-routines/scripts/hook-post-compact).
 # ─────────────────────────────────────────────────────────────────────────────
 
 BLUE='\033[94m'

@@ -78,9 +78,9 @@ the repository is public.
   rapport ») are the literal strings being matched. Translating them would silently stop the
   agents from ever triggering: the file would still look correct, and nothing would report an
   error. Same for their `name:` fields, which are referenced by the descriptions.
-- **`claude/.claude/statusline-command.sh` and `hooks/context-alert.sh`** — their header comments
-  and the alert strings they print are French, deliberately: they are read by the user, on screen,
-  mid-session. The surrounding code stays English.
+- **`claude/.claude/statusline-command.sh`** — its header comments and the alert strings it
+  prints are French, deliberately: they are read by the user, on screen, mid-session. The
+  surrounding code stays English.
 
 The rule of thumb: English everywhere, except where the French text **is the mechanism** rather
 than a description of it.

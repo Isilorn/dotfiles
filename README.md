@@ -132,7 +132,7 @@ machines — this repo. The other two are referenced here rather than duplicated
 | Mechanism | Installs | Runs on |
 |---|---|---|
 | provisioning tooling | Claude Code itself, the managed blocks of `~/.claude/CLAUDE.md`, the toolbox skills | Linux box only |
-| **this repo** | `settings.json`, keybindings, the status line, the context hook, the four agents | both |
+| **this repo** | `settings.json`, keybindings, the status line, the stow guard and its rule, the four agents | both |
 | skill deployment | the generic skills, from a local repo with no remote | Linux box only |
 
 ### On the Linux box
@@ -219,19 +219,17 @@ change to the hook. To disable the guard for one session, start Claude Code with
 
 ### Hooks referencing files this repo does not deploy
 
-`settings.json` registers four hook entries. `UserPromptSubmit` and `PreToolUse` point at
-`claude/.claude/hooks/context-alert.sh` and `stow-guard.sh`, which this repo deploys, so they are
-always there.
+`settings.json` registers three hook entries. `PreToolUse` points at
+`claude/.claude/hooks/stow-guard.sh`, which this repo deploys, so it is always there.
 
 `SessionStart` is different. Its two entries point at scripts under `~/.claude/skills/`, which
 are placed by a separate tool (`skill-deploy`, from the skills repo):
 
 - no matcher → `project-conformity/scripts/hook-session-start.sh`, at every session start;
 - `"matcher": "compact"` → `session-routines/scripts/hook-post-compact`, only after a
-  compaction. It archives the transcript segment synchronously, then prints a block the next
-  turn picks up. Its timeout is **120 s**, not the usual 10: common cases take 1–2 s, but the
-  worst measured case (a 228 MB transcript never archived) took 59.7 s. Killed by the timeout,
-  the session simply continues without the block.
+  compaction. It prints a block the next turn picks up — run the session routine first — and
+  returns at once, so the usual 10 s timeout applies. Killed by the timeout, the session simply
+  continues without the block.
 
 On a freshly stowed machine those files do not exist, and an unguarded command fails with
 exit 127 at every session start. Each entry is therefore wrapped:
